@@ -4,9 +4,9 @@ class Seg:
 
     Allows for an ipa symbol to represent the segment as shorthand, but treats the segment as a feature bundle internally.
     '''
-    def __init__(self, ipa: str, features: dict):
+    def __init__(self, ipa: str, features: dict=dict()):
         self._ipa = ipa
-        self._features = features
+        self.features = features
 
     def __str__(self) -> str:
         return self._ipa

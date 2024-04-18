@@ -1,4 +1,3 @@
-from algophon.symbols import UNKNOWN, UNDERSPECIFIED
 from algophon.seg import Seg
 
 import pkgutil
@@ -76,14 +75,14 @@ class SegInv:
             else: # add the segment to the dict
                 self._seg_to_feat_vec[seg] = feats
 
-    def add(self, ipa_seg: str) -> bool:
+    def add(self, ipa_seg: str) -> None:
         '''
         :ipa_seg: a IPA segment in str form
 
-        :return: True if the addition was successful
+        :return: None
         '''
         if ipa_seg in self:
-            return True
+            return
         if ipa_seg not in self._seg_to_feat_vec:
             raise KeyError(f'Segment {ipa_seg} is not in the IPA data from {self._ipa_source}.')
         feat_vec = self._seg_to_feat_vec[ipa_seg] # get the feature vector
@@ -91,9 +90,8 @@ class SegInv:
         seg = Seg(ipa=ipa_seg, features=features)
         self.segs.add(seg)
         self._ipa_to_seg[ipa_seg] = seg
-        return True
 
-    def add_segments(self, ipa_segs: object) -> None:
+    def add_segs(self, ipa_segs: object) -> None:
         '''
         :ipa_segs: an iterable of IPA segments, each in str form
 
@@ -101,3 +99,6 @@ class SegInv:
         '''
         for ipa in ipa_segs:
             self.add(ipa)
+
+    def add_segs_by_str(self, seg_str: str) -> None:
+        self.add_segs(seg_str.split())
