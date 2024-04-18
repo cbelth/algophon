@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "algophon"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
     { name = "Caleb Belth" },
 ]
@@ -23,6 +23,9 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
+
+[tool.setuptools.package-data]
+algophon = ["ipa.txt"]
 
 [project.urls]
 Homepage = "https://github.com/cbelth/algophon"
