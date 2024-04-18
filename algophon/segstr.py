@@ -13,20 +13,22 @@ class SegStr:
         self._seg_inv = seg_inv
 
         if isinstance(segs, list):
-            self._segs = list(self._seg_inv[seg] for seg in segs)
+            self._segs = list(self._seg_inv.add_and_get(seg) for seg in segs)
         elif isinstance(segs, str):
-            self._segs = list(self._seg_inv[seg] for seg in segs.split())
+            self._segs = list(self._seg_inv.add_and_get(seg) for seg in segs.split())
         else:
             raise ValueError(f':segs: should be a list of IPA symbols, a list of Seg objects, or a str of space-separated IPA symbols, instead found type {type(segs)}')
+        
+        # compute str form
+        self._str = ''
+        for seg in self._segs:
+            self._str += f'{seg}'
         
     def __len__(self) -> int:
         return len(self._segs)
     
     def __str__(self) -> str:
-        s = ''
-        for seg in self._segs:
-            s += f'{seg}'
-        return s
+        return self._str
     
     def __repr__(self) -> str:
         return self.__str__()
@@ -138,7 +140,7 @@ class SegStr:
             raise ValueError(f'Cannot compare a SegStr object with an object of type {type(other)}')
         idx = -1
         for offset in range(len(other)):
-            if self.segments[idx - offset] != other[idx - offset]:
+            if self._segs[idx - offset] != other[idx - offset]:
                 return False
         return True
 

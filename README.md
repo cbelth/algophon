@@ -129,13 +129,120 @@ You can add segments by the `add`, `add_segments`, and `add_segments_by_str` met
 
 The reason that `add_segs_by_str` requires the segments be space-separated is because not all IPA symbols are only one char (e.g., `'eː'`). Moreover, this is consistent with the [Sigmorphon](https://github.com/sigmorphon) challenges data format commonly used in morphophonology tasks.
 
+These `add*` methods automatically create `Seg` objects and assign them `features` based on either Panphon (default) or the `ipa_file_path` file.
+
+```python
+>>> print(seginv['eː'].features)
+{'syl': '+', 'son': '+', 'cons': '-', 'cont': '+', 'delrel': '-', 'lat': '-', 'nas': '-', 'strid': '0', 'voi': '+', 'sg': '-', 'cg': '-', 'ant': '0', 'cor': '-', 'distr': '0', 'lab': '-', 'hi': '-', 'lo': '-', 'back': '-', 'round': '-', 'velaric': '-', 'tense': '+', 'long': '+', 'hitone': '0', 'hireg': '0'}
+```
+
+This also demonstrates that `seginv` operates like a dictionary in that you can retrieve and check the existence of segments by their IPA.
+
+```python
+>>> 'eː' in seginv
+True
+```
+
 ### Strings of Segments: `SegStr`
 
 **A class to represent a sequence of phonological segments (Seg objects).**
 
+The class `SegStr` allows for handling several tricky aspects of IPA sequences. It is common practice to represent strings of IPA sequences in a space-separated fashion such that, for example, [eːntjə] is represented `'eː n t j ə'`.
+
+Creating a `SegStr` object requires the following arguments:
+  - `segs`: a collection of segments, which can be in any of the following formats:
+    - str of IPA symbols, where each symbol is separated by a space ' ' (**most common**)
+    - list of IPA symbols
+    - list of Seg objects
+  - `seg_inv`: a `SegInv` object
+
+```python
+>>> seginv = SegInv() # init SegInv
+>>> seq = SegStr('eː n t j ə', seginv)
+>>> print(seq)
+eːntjə
+```
+
+Creating the `SegStr` object automatically adds the segments in the object to the `SegInv` object.
+
+```python
+>>> print(seginv.segs)
+{ə, t, n, j, eː}
+```
+
+For clean visuzliation, `SegStr` displays the sequence of segments without spaces, as `print(seq)` shows above. But internally a `SegStr` object knows what the segments are:
+
+```python
+>>> print(len(seq))
+5
+>>> seq[0]
+eː
+>>> type(seq[0]) # indexing returns a Seg object
+<class 'algophon.seg.Seg'>
+>>> seq[-2:]
+jə
+>>> type(seq[-2:]) # slicing returns a new SegStr object
+<class 'algophon.segstr.SegStr'>
+>>> seq[-2:] == 'j ə' # comparison to str objects works as expected
+True
+>>> seq[-2:] == 'ə n'
+False
+```
+
+`SegStr` also implements equivalents of useful str methods.
+
+```python
+>>> seq.endswith('j ə')
+True
+>>> dim_sufx = seq[-2:]
+>>> seq.endswith(dim_sufx)
+True
+>>> seq.startswith(seq[:-2])
+True
+```
+
+A `SegStr` object hashes to the value of its (space-separated) string:
+
+```python
+>>> len({seq, 'eː n t j ə'})
+1
+>>> seq in {'eː n t j ə'}
+True
+```
+
 ### Natural Class: `NatClass`
 
 **A class to represent a Natural class, in the sense of sets of segments represented intensionally as conjunctions of features.**
+
+```python
+>>> son = NatClass(feats={'+son'}, seg_inv=seginv)
+>>> son
+[+son]
+>>> 'ə' in son
+True
+>>> 'n' in son
+True
+>>> 't' in son
+False
+```
+
+The class also allows you to get the natural class's extension and the extension's complement, relative to the `SegInv` (in our example, only `{ə, t, n, j, eː}` are in `seginv`):
+
+```python
+>>> son.extension()
+{eː, j, ə, n}
+>>> son.extension_complement()
+{t}
+```
+
+You can also retrieve an extension (complement) directly from a `SegInv` object without creating a `NatClass` obj:
+
+```python
+>>> seginv.extension({'+syl'})
+{ə, eː}
+>>> seginv.extension_complement({'+syl'})
+{j, t, n}
+```
 
 ### Symbols: The `symbols` module
 

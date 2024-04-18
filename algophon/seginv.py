@@ -1,4 +1,5 @@
 from algophon.seg import Seg
+from algophon.natclass import NatClass
 
 import pkgutil
 
@@ -54,7 +55,7 @@ class SegInv:
         :return: the Seg object corresponding to :seg: if present, otherwise KeyError is raised
         '''
         if seg not in self:
-            raise KeyError(f'{seg} of type {type(seg)} is not in the SegInv')
+            raise KeyError(f'{seg} of type {type(seg)} is not in the SegInv (try <seg_inv_obj>.add({seg}))')
         return self._ipa_to_seg[seg]
 
     def _load_seg_to_feat_dict(self) -> None:
@@ -102,3 +103,25 @@ class SegInv:
 
     def add_segs_by_str(self, seg_str: str) -> None:
         self.add_segs(seg_str.split())
+
+    def add_and_get(self, seg: object) -> Seg:
+        self.add(f'{seg}')
+        return self[seg]
+    
+    def extension(self, nat_class) -> set:
+        '''
+        :nat_class: a set of features or a NatClass object
+
+        :return: the extension of the :nat_class:
+        '''
+        if type(nat_class) is set:
+            nat_class = NatClass(nat_class, self)
+        return set(seg for seg in self.segs if seg in nat_class)
+    
+    def extension_complement(self, nat_class) -> set:
+        '''
+        :nat_class: a set of features or a NatClass object
+
+        :return: the extensional complement of :nat_class: relative to :self: SegInv \ NatClass
+        '''
+        return self.segs.difference(self.extension(nat_class=nat_class))
