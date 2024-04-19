@@ -93,17 +93,16 @@ class SegStr:
         :return: a new SegStr object containing the concatenation
         '''
         if isinstance(other, str) or isinstance(other, list):
-            other = SegStr(other, alphabet=self.alphabet)
+            other = SegStr(other, seginv=self._seginv)
         elif not isinstance(other, SegStr):
             raise ValueError(f'Cannot concatenate a SegStr object with an object of type {type(other)}')
-        return SegStr(segments=self.segments + other.segments, alphabet=self.alphabet)
+        return SegStr(segs=self._segs + other._segs, seginv=self._seginv)
     
     def __iter__(self):
         '''
         Iterating over a SegStr is the same as iterating over its Seg objects.
         '''
         return self._segs.__iter__()
-    
 
     '''
     Equivalents of str & list methods

@@ -105,9 +105,21 @@ class SegInv:
             self.add(ipa)
 
     def add_segs_by_str(self, seg_str: str) -> None:
+        '''
+        :ipa_segs: a str of space-separated IPA segments
+
+        :return: None
+        '''
         self.add_segs(seg_str.split())
 
     def add_and_get(self, seg: object) -> Seg:
+        '''
+        Useful for adding a str IPA seg and retrieving its Seg object in one action.
+
+        :seg: an IPA segment in str form or a Seg object
+
+        :return: the Seg object corresponding to the IPA seg
+        '''
         self.add(f'{seg}')
         return self[seg]
     
