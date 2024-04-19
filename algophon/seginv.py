@@ -55,12 +55,11 @@ class SegInv:
         :return: the Seg object corresponding to :seg: if present, otherwise KeyError is raised
         '''
         if seg not in self:
-            raise KeyError(f'{seg} of type {type(seg)} is not in the SegInv (try <seg_inv_obj>.add({seg}))')
+            raise KeyError(f'{seg} of type {type(seg)} is not in the SegInv (try <seginv_obj>.add({seg}))')
         return self._ipa_to_seg[seg]
 
     def _load_seg_to_feat_dict(self) -> None:
         self._seg_to_feat_vec = dict()
-        # with open(self.ipa_file_path, 'r') as f: # load IPA file
         data = pkgutil.get_data(__name__, "ipa.txt")
 
         if self.ipa_file_path is None:
@@ -75,6 +74,10 @@ class SegInv:
                 self.feature_space = feats
             else: # add the segment to the dict
                 self._seg_to_feat_vec[seg] = feats
+
+        if self.ipa_file_path is None:
+            # make ord('g') == 103 and ord('ɡ') == 609 the same, since panphon only as 609
+            self._seg_to_feat_vec['g'] = self._seg_to_feat_vec['ɡ']
 
     def add(self, ipa_seg: str) -> None:
         '''

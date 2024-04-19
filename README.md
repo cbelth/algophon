@@ -154,7 +154,7 @@ Creating a `SegStr` object requires the following arguments:
     - str of IPA symbols, where each symbol is separated by a space ' ' (**most common**)
     - list of IPA symbols
     - list of Seg objects
-  - `seg_inv`: a `SegInv` object
+  - `seginv`: a `SegInv` object
 
 ```python
 >>> seginv = SegInv() # init SegInv
@@ -215,7 +215,7 @@ True
 **A class to represent a Natural class, in the sense of sets of segments represented intensionally as conjunctions of features.**
 
 ```python
->>> son = NatClass(feats={'+son'}, seg_inv=seginv)
+>>> son = NatClass(feats={'+son'}, seginv=seginv)
 >>> son
 [+son]
 >>> 'ə' in son

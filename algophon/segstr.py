@@ -2,20 +2,20 @@ class SegStr:
     '''
     A class representing a sequence of phonological segments (Seg objects).
     '''
-    def __init__(self, segs, seg_inv):
+    def __init__(self, segs, seginv):
         '''
         :segs: Can be any of the following:
             - a str of IPA symbols, where each symbol is separated by a space ' '
             - a list of IPA symbols
             - a list of Seg objects
-        :seg_inv: a SegInv object
+        :seginv: a SegInv object
         '''
-        self._seg_inv = seg_inv
+        self._seginv = seginv
 
         if isinstance(segs, list):
-            self._segs = list(self._seg_inv.add_and_get(seg) for seg in segs)
+            self._segs = list(self._seginv.add_and_get(seg) for seg in segs)
         elif isinstance(segs, str):
-            self._segs = list(self._seg_inv.add_and_get(seg) for seg in segs.split())
+            self._segs = list(self._seginv.add_and_get(seg) for seg in segs.split())
         else:
             raise ValueError(f':segs: should be a list of IPA symbols, a list of Seg objects, or a str of space-separated IPA symbols, instead found type {type(segs)}')
         
@@ -77,7 +77,7 @@ class SegStr:
         '''
         res = self._segs.__getitem__(idx)
         if isinstance(res, list): # handle a slice
-            return SegStr(segs=res, seg_inv=self._seg_inv)
+            return SegStr(segs=res, seginv=self._seginv)
         return res # handle an index
     
     def __add__(self, other: object):
@@ -122,7 +122,7 @@ class SegStr:
         elif not isinstance(other, list) and not isinstance(other, SegStr):
             raise ValueError(f'Cannot compare a SegStr object with an object of type {type(other)}')
         for idx in range(len(other)):
-            if self.segments[idx] != other[idx]:
+            if self._segs[idx] != other[idx]:
                 return False
         return True
     
