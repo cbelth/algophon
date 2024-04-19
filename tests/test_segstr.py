@@ -38,6 +38,19 @@ class TestSegStr(unittest.TestCase):
         assert('eː n t j ə' in {x})
         assert(len({x, 'eː n t j ə', SegStr('eː n t j ə', seginv=SegInv())}) == 1)
 
+    def test_concat(self):
+        x = SegStr('eː n t', seginv=SegInv())
+        y = SegStr('j ə', seginv=SegInv())
+        assert(x + y == 'eː n t j ə')
+
+    def test_lt(self):
+        x = SegStr('a', seginv=SegInv())
+        y = SegStr('b', seginv=SegInv())
+        assert(x < y)
+
+        x = SegStr('a b', seginv=SegInv())
+        y = SegStr('b', seginv=SegInv())
+        assert(x < y)
 
 if __name__ == "__main__":
     unittest.main()

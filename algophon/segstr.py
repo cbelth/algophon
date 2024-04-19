@@ -65,7 +65,7 @@ class SegStr:
         '''
         if not isinstance(other, SegStr):
             raise ValueError(f'Cannot compare a SegStr object with an object of type {type(other)}')
-        return self._segs() < other._segs()
+        return self._segs < other._segs
     
     def __getitem__(self, idx):
         '''
