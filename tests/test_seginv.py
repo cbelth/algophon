@@ -45,5 +45,20 @@ class TestSegInv(unittest.TestCase):
         assert(seginv.extension_complement({'+cons'}) == {'a', 'e', 'i', 'o', 'u'})
         assert(seginv.extension_complement({'-syl', '+voi'}) == {'a', 'e', 'i', 'o', 'u', 'p', 't', 'k', 's'})
 
+    def test_feature_intersection(self):
+        seginv = SegInv()
+        vs = {'a', 'e', 'i', 'o', 'u'}
+        seginv.add_segs(vs)
+        assert(seginv.feature_intersection(vs) == {'+cont', '-sg', '-delrel', '+tense', '-long', '-cons', '-velaric',
+                                                   '-nas', '+syl', '-cg', '+voi', '-lat', '+son', '-cor'})
+        
+    def test_feature_diff(self):
+        seginv = SegInv()
+        seginv.add_segs({'t', 'd'})
+        assert(seginv.feature_diff('t', 'd') == {'voi'})
+
+        seginv.add_segs({'i', 'e'})
+        assert(seginv.feature_diff('i', 'e') == {'hi'})
+
 if __name__ == "__main__":
     unittest.main()

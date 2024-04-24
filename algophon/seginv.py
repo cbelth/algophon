@@ -1,5 +1,6 @@
 from algophon.seg import Seg
 from algophon.natclass import NatClass
+from algophon.symbols import UNDERSPECIFIED
 
 import pkgutil
 
@@ -140,3 +141,28 @@ class SegInv:
         :return: the extensional complement of :nat_class: relative to :self: SegInv \ NatClass
         '''
         return self.segs.difference(self.extension(nat_class=nat_class))
+    
+    def feature_intersection(self, segs, exclude_underspecified: bool=True) -> set:
+        '''
+        :segs: an iterable of phonological segments
+        :exclude_underspecified: if True (default), excludes features that all the segments are underspecified for
+
+        :return: the features shared by all the :segs: (excludes features where all segs are underspecified)
+        '''
+        segs = set(self[seg] for seg in segs)
+        return set.intersection(*list(set(f'{val}{feat}' for feat, val in seg.features.items() if val != UNDERSPECIFIED or not exclude_underspecified) for seg in segs))
+    
+    def feature_diff(self, seg1, seg2) -> set:
+        '''
+        :seg1: phonological segment
+        :seg2: phonological segment
+
+        :return: the features that differ between :seg1: and :seg2:
+        '''
+        seg1 = self[seg1]
+        seg2 = self[seg2]
+        diff = set()
+        for feat in self.feature_space:
+            if seg1.features[feat] != seg2.features[feat]:
+                diff.add(feat)
+        return diff

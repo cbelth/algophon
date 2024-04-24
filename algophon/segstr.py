@@ -120,6 +120,8 @@ class SegStr:
             other = other.split()
         elif not isinstance(other, list) and not isinstance(other, SegStr):
             raise ValueError(f'Cannot compare a SegStr object with an object of type {type(other)}')
+        if len(other) > len(self):
+            return False
         for idx in range(len(other)):
             if self._segs[idx] != other[idx]:
                 return False
@@ -137,6 +139,8 @@ class SegStr:
             other = other.split()
         elif not isinstance(other, list) and not isinstance(other, SegStr):
             raise ValueError(f'Cannot compare a SegStr object with an object of type {type(other)}')
+        if len(other) > len(self):
+            return False
         idx = -1
         for offset in range(len(other)):
             if self._segs[idx - offset] != other[idx - offset]:

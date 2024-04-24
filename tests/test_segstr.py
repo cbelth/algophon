@@ -25,11 +25,20 @@ class TestSegStr(unittest.TestCase):
         assert(isinstance(x[-2:], SegStr))
 
     def test_endswith_startswith(self):
-        x = SegStr('eː n t j ə', seginv=SegInv())
+        seginv = SegInv()
+        x = SegStr('eː n t j ə', seginv=seginv)
         assert(x.endswith('j ə'))
         sufx = x[-2:]
         assert(x.endswith(sufx))
         assert(x.startswith(x[:-2]))
+
+        y = SegStr('eː n t', seginv=seginv)
+        assert(x.startswith(y))
+        assert(not y.startswith(x))
+
+        z = SegStr('j ə', seginv=seginv)
+        assert(x.endswith(z))
+        assert(not z.endswith(x))
 
     def test_hash(self):
         x = SegStr('eː n t j ə', seginv=SegInv())
