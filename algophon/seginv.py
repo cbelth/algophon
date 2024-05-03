@@ -37,7 +37,7 @@ class SegInv:
     def __iter__(self):
         return self.segs.__iter__()
     
-    def __contains__(self, seg: object):
+    def __contains__(self, seg: object) -> bool:
         '''
         :seg: Can be any of the following:
             - str IPA symbol
@@ -47,7 +47,7 @@ class SegInv:
         '''
         return seg in self.segs
     
-    def __getitem__(self, seg: object):
+    def __getitem__(self, seg: object) -> Seg:
         '''
         :seg: Can be any of the following:
             - str IPA symbol
@@ -82,7 +82,7 @@ class SegInv:
 
     def add(self, ipa_seg: str) -> None:
         '''
-        :ipa_seg: a IPA segment in str form
+        :ipa_seg: an IPA segment in str form
 
         :return: None
         '''

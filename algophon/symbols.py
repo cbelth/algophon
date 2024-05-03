@@ -8,3 +8,4 @@ NASALIZED = '\u0303'  # ◌̃
 UNDERSPECIFIED = '0'
 UNK = '?'
 NEG = '¬'
+EMPTY = '_'
