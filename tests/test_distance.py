@@ -15,7 +15,21 @@ class TestDistance(unittest.TestCase):
         s1 = 'c a t'
         s2 = 'u n c a t i s'
         assert(edit_distance.distance(s1, s2) == 4)
-        assert(edit_distance.alignments(s1, s2) == [('_ _ c a t _ _', s2)])
+        assert(edit_distance.alignments(s1, s2) == [('_ _ c a t _ _', 'u n c a t i s')])
+
+        s1 = 'v i n t n e r'
+        s2 = 'w r i t e r s'
+        assert(edit_distance.distance(s1, s2) == 5)
+        assert(edit_distance.alignments(s1, s2) == [
+            ('v _ i n t n e r _', 'w r i _ t _ e r s'),
+            ('_ v i n t n e r _', 'w r i _ t _ e r s'),
+            ('v i n t n e r _', 'w r i t _ e r s')
+        ])
+
+        s1 = 'q a c d b d'
+        s2 = 'q a w x b'
+        assert(edit_distance.distance(s1, s2) == 3)
+        assert(edit_distance.alignments(s1, s2) == [('q a c d b d', 'q a w x b _')])
 
 if __name__ == "__main__":
     unittest.main()

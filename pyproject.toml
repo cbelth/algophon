@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "algophon"
-version = "0.0.8"
+version = "0.0.9"
 authors = [
     { name = "Caleb Belth" },
 ]
@@ -22,6 +22,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy >= 1.24",
 ]
 
 [tool.setuptools.package-data]

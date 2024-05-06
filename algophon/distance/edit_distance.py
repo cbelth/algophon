@@ -3,12 +3,21 @@ from typing import Union
 from algophon import SegStr, SegInv
 from algophon.symbols import EMPTY
 
+'''
+Provides an implementation of edit distance and edit-distance-based allignment between SegStr objects.
+The implementation uses dynamic programming, following the description by Gusfield (1997, ch.11).
+
+Gusfield, D. (1997). Algorithms on stings, trees, and sequences: Computer science and computational biology. 
+University of Cambridge Press.
+'''
+
 UP_ARROW = '↑'
 LEFT_ARROW = '←'
 DIAG_ARROW = '↖'
 
 def _compute_table(s1: SegStr, s2: SegStr) -> np.array:
     '''
+    Computes an edit distance dynamic programming table.
     '''
     n = len(s1) # s1 (len n) forms the rows of the table
     m = len(s2) # sw (len m) forms the cols of the table
@@ -56,7 +65,7 @@ def _compute_table(s1: SegStr, s2: SegStr) -> np.array:
 
 def _get_paths(cell: dict, table: np.array) -> tuple[list, list]:
     '''
-    Recursively computes all paths from the :cell: to the (0, 0) cell, along with the corresponding alignments.
+    Recursively computes all paths from the :cell: to the (0, 0) cell, along with the corresponding alignments, in an edit distance dynamic programming :table:.
     '''
     if cell['i'] == 0 and cell['j'] == 0: # base case
         return [[]], [[]]
@@ -85,6 +94,14 @@ def _get_paths(cell: dict, table: np.array) -> tuple[list, list]:
     return paths, alignments
 
 def distance(s1: Union[str, SegStr], s2: Union[str, SegStr]) -> int:
+    '''
+    Computes the edit distance between two str/SegStr objects
+
+    :s1: a str or SegStr
+    :s2: a str or SegStr
+
+    :return: the edit distance between :s1: and :s2:
+    '''
     if isinstance(s1, str):
         s1 = SegStr(segs=s1, seginv=SegInv())
     if isinstance(s2, str):
@@ -95,6 +112,13 @@ def distance(s1: Union[str, SegStr], s2: Union[str, SegStr]) -> int:
 
 def alignments(s1: Union[str, SegStr], s2: Union[str, SegStr]) -> list:
     '''
+    Computes the optimal alignments between two str/SegStr objects w.r.t edit distance
+
+    :s1: a str or SegStr
+    :s2: a str or SegStr
+
+    :return: a list of all alignments that minimze the edit distance between :s1: and :s2:
+        - Each alignment is a tuple of SegStr objects
     '''
     if isinstance(s1, str):
         s1 = SegStr(segs=s1, seginv=SegInv())
@@ -117,14 +141,3 @@ def alignments(s1: Union[str, SegStr], s2: Union[str, SegStr]) -> list:
         alignments.append((SegStr(aligned_s1, s1._seginv), SegStr(aligned_s2, s1._seginv)))
 
     return alignments
-
-if __name__ == '__main__':
-    x = 'vintner'
-    y = 'writers'
-    print(distance(x, y))
-    alignments(x, y)
-
-    x = 'qacdbd'
-    y = 'qawxb'
-    print(distance(x, y))
-    alignments(x, y)
