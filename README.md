@@ -4,7 +4,7 @@
 
 The project is based on code developed by [Caleb Belth](https://cbelth.github.io/) during the course of his PhD; the title of his [dissertation](https://cbelth.github.io/public/assets/documents/belth_dissertation.pdf), *Towards an Algorithmic Account of Phonological Rules and Representations*, serves as the origin for the repository's name *algophon*.
 
-This is a <span style="color:orange">work in progress</span>. The pypi distribution and documentation will be updated as the project progresses! The initial plan for the project is to include:
+This is a <span style="color:orange">work in progress</span>. The PyPI distribution and documentation will be updated as the project progresses! The initial plan for the project is to include:
 1. Handy tools for working with strings of phonological segments.
 2. Implementations of computational learning models.
 
@@ -14,7 +14,7 @@ Item (1) will be implemented first.
 
 ## Install
 
-```
+```bash
 pip install algophon
 ```
 
@@ -24,7 +24,7 @@ The code at the top level of the package provides some nice functionality for ea
 
 The following examples assume you have imported the appropriate classes:
 
-```python
+```pycon
 >>> from algophon import Seg, SegInv, SegStr, NatClass
 ```
 
@@ -36,7 +36,7 @@ You are unlikely to be creating `Seg` objects yourself very often. They will usu
 - `ipa`: a `str` IPA symbol
 - `features` (optional): a `dict` of features mapping to their corresponding values
 
-```python
+```pycon
 >>> seg = Seg(ipa='i', features={'syl': '+', 'voi': '+', 'stri': '0'})
 ```
 
@@ -46,14 +46,14 @@ What is important to know is how `Seg` objects behave, and why they are handy.
 
 If you `print` a `Seg` object, it will print its IPA:
 
-```python
+```pycon
 >>> print(seg)
 i
 ```
 
 If you compare a `Seg` object to a `str`, it will behave like it is the IPA symbol:
 
-```python
+```pycon
 >>> print(seg == 'i')
 True
 >>> print(seg == 'e')
@@ -62,7 +62,7 @@ False
 
 A `Seg` object hashes to the same value as its IPA symbol:
 
-```python
+```pycon
 >>> print(len({seg, 'i'}))
 1
 >>> print('i' in {seg}, seg in {'i'})
@@ -71,14 +71,14 @@ True True
 
 <span style="color:green">**Second**</span>, in the important respects `Seg` behaves like a feature bundle (see also the other classes, where other benefits will become clear).
 
-```python
+```pycon
 >>> print(seg.features['syl'])
 +
 ```
 
-<span style="color:green">**Third**</span>, `Seg` handles IPA symbols that are longer than one unicode char.
+<span style="color:green">**Third**</span>, `Seg` handles IPA symbols that are longer than one Unicode char.
 
-```python
+```pycon
 >>> tsh = Seg(ipa='t͡ʃ')
 >>> print(tsh)
 t͡ʃ
@@ -103,11 +103,11 @@ A `SegInv` object is a collection of `Seg` objects. A `SegInv` requires no argum
 By default, `SegInv` uses [Panphon](https://github.com/dmort27/panphon) (Mortensen et. al., 2016) features. The optional parameters allow you to use your own features. The file at `ipa_file_path` must be formatted like this:
 - The first row must be a header of feature names, separated by the `sep` (by default, `\t`)
 - The first column must contain the segment IPAs (the header row can have anything, e.g., `SEG`)
-- The remaining columns (non first row) must contain the feature values.
+- The remaining columns (non-first row) must contain the feature values.
 
 When a `SegInv` object is created, it is empty:
 
-```python
+```pycon
 >>> seginv = SegInv()
 >>> seginv
 SegInv of size 0
@@ -115,7 +115,7 @@ SegInv of size 0
 
 You can add segments by the `add`, `add_segments`, and `add_segments_by_str` methods:
 
-```python
+```pycon
 >>> seginv.add('i')
 >>> print(seginv.segs)
 {i}
@@ -127,18 +127,18 @@ You can add segments by the `add`, `add_segments`, and `add_segments_by_str` met
 {b, t, d, i, j, n, p, ə, eː}
 ```
 
-The reason that `add_segs_by_str` requires the segments be space-separated is because not all IPA symbols are only one char (e.g., `'eː'`). Moreover, this is consistent with the [Sigmorphon](https://github.com/sigmorphon) challenges data format commonly used in morphophonology tasks.
+The reason that `add_segs_by_str` requires the segments to be space-separated is because not all IPA symbols are only one char (e.g., `'eː'`). Moreover, this is consistent with the [Sigmorphon](https://github.com/sigmorphon) challenges data format commonly used in morphophonology tasks.
 
 These `add*` methods automatically create `Seg` objects and assign them `features` based on either Panphon (default) or the `ipa_file_path` file.
 
-```python
+```pycon
 >>> print(seginv['eː'].features)
 {'syl': '+', 'son': '+', 'cons': '-', 'cont': '+', 'delrel': '-', 'lat': '-', 'nas': '-', 'strid': '0', 'voi': '+', 'sg': '-', 'cg': '-', 'ant': '0', 'cor': '-', 'distr': '0', 'lab': '-', 'hi': '-', 'lo': '-', 'back': '-', 'round': '-', 'velaric': '-', 'tense': '+', 'long': '+', 'hitone': '0', 'hireg': '0'}
 ```
 
 This also demonstrates that `seginv` operates like a dictionary in that you can retrieve and check the existence of segments by their IPA.
 
-```python
+```pycon
 >>> 'eː' in seginv
 True
 ```
@@ -156,7 +156,7 @@ Creating a `SegStr` object requires the following arguments:
     - list of Seg objects
   - `seginv`: a `SegInv` object
 
-```python
+```pycon
 >>> seginv = SegInv() # init SegInv
 >>> seq = SegStr('eː n t j ə', seginv)
 >>> print(seq)
@@ -165,14 +165,14 @@ eːntjə
 
 Creating the `SegStr` object automatically adds the segments in the object to the `SegInv` object.
 
-```python
+```pycon
 >>> print(seginv.segs)
 {ə, t, n, j, eː}
 ```
 
-For clean visuzliation, `SegStr` displays the sequence of segments without spaces, as `print(seq)` shows above. But internally a `SegStr` object knows what the segments are:
+For clean visualization, `SegStr` displays the sequence of segments without spaces, as `print(seq)` shows above. But internally a `SegStr` object knows what the segments are:
 
-```python
+```pycon
 >>> print(len(seq))
 5
 >>> seq[0]
@@ -189,9 +189,9 @@ True
 False
 ```
 
-`SegStr` also implements equivalents of useful str methods.
+`SegStr` also implements equivalents of useful `str` methods.
 
-```python
+```pycon
 >>> seq.endswith('j ə')
 True
 >>> dim_sufx = seq[-2:]
@@ -203,7 +203,7 @@ True
 
 A `SegStr` object hashes to the value of its (space-separated) string:
 
-```python
+```pycon
 >>> len({seq, 'eː n t j ə'})
 1
 >>> seq in {'eː n t j ə'}
@@ -214,7 +214,7 @@ True
 
 **A class to represent a Natural class, in the sense of sets of segments represented intensionally as conjunctions of features.**
 
-```python
+```pycon
 >>> son = NatClass(feats={'+son'}, seginv=seginv)
 >>> son
 [+son]
@@ -228,7 +228,7 @@ False
 
 The class also allows you to get the natural class's extension and the extension's complement, relative to the `SegInv` (in our example, only `{ə, t, n, j, eː}` are in `seginv`):
 
-```python
+```pycon
 >>> son.extension()
 {eː, j, ə, n}
 >>> son.extension_complement()
@@ -237,7 +237,7 @@ The class also allows you to get the natural class's extension and the extension
 
 You can also retrieve an extension (complement) directly from a `SegInv` object without creating a `NatClass` obj:
 
-```python
+```pycon
 >>> seginv.extension({'+syl'})
 {ə, eː}
 >>> seginv.extension_complement({'+syl'})
@@ -246,7 +246,7 @@ You can also retrieve an extension (complement) directly from a `SegInv` object 
 
 ### Symbols: The `symbols` module
 
-The `symbols` module (techincally just a file...) contains a number of constant variables that store some useful symbols:
+The `symbols` module (technically just a file...) contains a number of constant variables that store some useful symbols:
 
 ```python
 LWB = '⋊'
@@ -263,7 +263,7 @@ NEG = '¬'
 
 These can be accessed like this:
 
-```python
+```pycon
 >>> from algophon.symbols import *
 >>> NASALIZED
 '̃'
