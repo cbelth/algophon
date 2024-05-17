@@ -85,7 +85,7 @@ class D2L:
             sr = self.rule(sr)
         return sr # return sr
 
-    # calling the D2L object amounts to calling its produce() method
+    # calling a D2L object amounts to calling its produce() method
     __call__ = produce
 
     def _load_train(self, path: str, sep: str) -> set:
@@ -170,10 +170,15 @@ class D2L:
         '''
         if discrepancy is None: # use self._discrepancy by default
             discrepancy = self._discrepancy
+        target = discrepancy.get_alternating_UR_segs() # compute target segs
 
-        if harmony:
+        if harmony: # TODO remove condition
             print(pairs)
             lctxts, rctxts = self._get_tier_adj_contexts(discrepancy=discrepancy, tier=None)
+            left_rule = Rule(seginv=self.seginv, target=target, left_ctxts=lctxts, harmony=harmony)
+            right_rule = Rule(seginv=self.seginv, target=target, right_ctxts=rctxts, harmony=harmony)
+            print(left_rule)
+            print(right_rule)
 
     def _get_tier_adj_contexts(self, discrepancy: Discrepancy, tier: Union[None, Tier]) -> tuple[set, set]:
         '''

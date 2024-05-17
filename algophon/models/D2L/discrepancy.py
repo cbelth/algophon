@@ -10,7 +10,7 @@ class Discrepancy:
         :feature_diff: the features that differ between alternating ur_seg ~ sr_seg pairs
         '''
         self.alternations = set() # stores the (ur_seg ~ sr_seg) alternations corresponding to the discrepancy
-        self.instances = list() # stores each instance of the discrepancy
+        self.instances = set() # stores each instance of the discrepancy
         self.feature_diff = feature_diff
 
     def __contains__(self, item: tuple) -> bool:
@@ -31,7 +31,7 @@ class Discrepancy:
         :return: None
         '''
         self.alternations.add((ur_seg, sr_seg)) # update alternations
-        self.instances.append((ur, i, sr_seg)) # update instances
+        self.instances.add((ur, i, sr_seg)) # update instances
 
     def get_alternating(self) -> set:
         '''
