@@ -26,6 +26,7 @@ class D2L:
         self.verbose = verbose
 
         self._discrepancy = None # the discrepancy to account for
+        self.rule = None
 
     def train_on_file(self, path: str, sep: str='\t') -> object:
         '''
@@ -52,13 +53,24 @@ class D2L:
         :return: the D2L model object
         '''
         pairs = self._train_setup(pairs) # set everything up to train
-        # TODO
+
         return self
 
-    def produce(self, ur: SegStr) -> SegStr:
+    def produce(self, ur: Union[SegStr, str]) -> SegStr:
         '''
+        :ur: a UR in one of the following forms:
+            - space separated str of IPA symbols
+            - SegStr object
+        
+        :return: the SR predicted by the model (= :ur: if there is no rule, or the rule does not apply)
         '''
-        pass # TODO
+        if isinstance(ur, str): # convert str to SegStr
+            ur = SegStr(ur, seginv=self.seginv)
+
+        sr = ur # init sr to equal ur
+        if self.rule is not None: # if there is a rule, apply it
+            sr = self.rule(sr)
+        return sr # return sr
 
     # calling the D2L object amounts to calling its produce() method
     __call__ = produce
