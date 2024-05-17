@@ -2,6 +2,7 @@ import unittest
 import sys
 sys.path.append('../')
 from algophon.seginv import SegInv
+from algophon.symbols import UNDERSPECIFIED
 
 class TestSegInv(unittest.TestCase):
     def test_init(self):
@@ -22,6 +23,34 @@ class TestSegInv(unittest.TestCase):
         seginv.add_segs_by_str('eː n t j ə')
         assert(len(seginv) == 9)
         assert(seginv.segs == {'i', 'p', 'b', 't', 'd', 'eː', 'n', 'j', 'ə'}) 
+
+    def test_add_custom(self):
+        seginv = SegInv()
+
+        seginv.add('s')
+        seginv.add('ʃ')
+
+        shared_feats = set(feat[1:] for feat in seginv.feature_intersection({'s', 'ʃ'}, exclude_underspecified=False))
+        feat_diff = set(seginv.feature_space).difference(shared_feats)
+        features = dict((feat, val if feat not in feat_diff else UNDERSPECIFIED) for feat, val in seginv['s'].features.items())
+
+        seginv.add_custom(symbol='S', features=features)
+        assert('S' in seginv)
+        assert(seginv['S'].features == features)
+
+        try:
+            seginv.add_custom(symbol='V', features={'voi': '+'})
+            assert(False)
+        except ValueError as e:
+            assert(True)
+            assert(e.__str__() == 'The features do not match those in the feature space.')
+
+        try:
+            seginv.add_custom(symbol='s', features=features)
+            assert(False)
+        except ValueError as e:
+            assert(True)
+            assert(e.__str__() == 'The symbol "s" is already a symbol in the IPA data from Panphon (https://github.com/dmort27/panphon).')
 
     def test_get(self):
         seginv = SegInv()

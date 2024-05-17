@@ -124,6 +124,23 @@ class SegInv:
         self.add(f'{seg}')
         return self[seg]
     
+    def add_custom(self, symbol: str, features: dict) -> None:
+        '''
+        Adds a custom symbol (i.e., not one in the IPA inventory used to create the SegInv).
+        Useful for abstract segments like /S/ for {[s], [ʃ]}.
+
+        :symbol: A 
+
+        :return: None
+        '''
+        if symbol in self._seg_to_feat_vec:
+            raise ValueError(f'The symbol "{symbol}" is already a symbol in the IPA data from {self._ipa_source}.')
+        if set(features.keys()) != set(self.feature_space):
+            raise ValueError('The features do not match those in the feature space.')
+        seg = Seg(ipa=symbol, features=features)
+        self.segs.add(seg)
+        self._ipa_to_seg[symbol] = seg
+    
     def extension(self, nat_class) -> set:
         '''
         :nat_class: a set of features or a NatClass object
