@@ -47,6 +47,33 @@ class TestD2L(unittest.TestCase):
         assert(isinstance(projected, Tier.Projection))
         assert(projected.idxs == [1, 3])
 
+    def test_rule_init(self):
+        seginv = SegInv()
+        rule = Rule(seginv=seginv, target={'S'}, left_ctxts=NatClass(feats={'+strid'}, seginv=seginv))
+        assert(rule and rule.left_ctxts is not None and rule.right_ctxts is None)
+        rule = Rule(seginv=seginv, target={'S'}, left_ctxts={'S', 's', 'ʃ'})
+        assert(rule and rule.left_ctxts is not None and rule.right_ctxts is None)
+
+        rule = Rule(seginv=seginv, target={'S'}, right_ctxts=NatClass(feats={'+strid'}, seginv=seginv))
+        assert(rule and rule.left_ctxts is None and rule.right_ctxts is not None)
+        rule = Rule(seginv=seginv, target={'S'}, right_ctxts={'S', 's', 'ʃ'})
+        assert(rule and rule.left_ctxts is None and rule.right_ctxts is not None)
+
+        try:
+            Rule(seginv=seginv, target={'S'}, left_ctxts=NatClass(feats={'+strid'}, seginv=seginv), right_ctxts={'S', 's', 'ʃ'})
+            assert(False)
+        except ValueError as e:
+            assert(e.__str__() == 'D2L Rule cannot have both left and right contexts.')
+            assert(True)
+
+        try:
+            Rule(seginv=seginv, target={'S'})
+            assert(False)
+        except ValueError as e:
+            assert(e.__str__() == 'D2L Rule must have either left or right contexts.')
+            assert(True)
+
+
     def test_D2L_init(self):
         d2l = D2L(verbose=False)
         assert(d2l is not None)
