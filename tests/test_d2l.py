@@ -211,6 +211,53 @@ class TestD2L(unittest.TestCase):
         segstr = SegStr('b u m e', seginv=seginv)
         assert(rule._predictions(segstr) == [])
 
+    def test_rule_produce(self):
+        seginv = SegInv()
+        seginv.add_segs({'a', 'e', 'i', 'o', 'u', 'b', 'd', 'm', 'n', 'l'})
+        # make custom seg
+        features = dict(seginv['m'].features)
+        features['son'] = UNDERSPECIFIED
+        features['nas'] = UNDERSPECIFIED
+        seginv.add_custom('C1', features=features) # m ~ b
+        features = dict(seginv['n'].features)
+        features['son'] = UNDERSPECIFIED
+        features['nas'] = UNDERSPECIFIED
+        seginv.add_custom('C2', features=features) # n ~ d
+
+        tier = Tier(seginv=seginv, feats={'-syl'})
+        
+        # left-to-right (harmony)
+        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
+        assert(rule('b u m e t u C2 i l') == 'b u m e t u d i l')
+        assert(rule('b u m e C1 i l') == 'b u m e m i l')
+        assert(rule('b u m e C1 i C2') == 'b u m e m i n')
+        assert(rule('b u m e C1 i C2 u i t C1') == 'b u m e m i n u i t b')
+        assert(rule('b u m e') == 'b u m e')
+
+        # right-to-left (harmony)
+        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, right_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
+        assert(rule('l i C2 u t e m u b') == 'l i d u t e m u b')
+        assert(rule('l i C1 e m u b') == 'l i m e m u b')
+        assert(rule('C2 i C1 e m u b') == 'n i m e m u b')
+        assert(rule('C1 t i u C2 i C1 e m u b') == 'b t i u n i m e m u b')
+        assert(rule('b u m e') == 'b u m e')
+
+        # left-to-right (disharmony)
+        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
+        assert(rule('b u m e t u C2 i l') == 'b u m e t u n i l')
+        assert(rule('b u m e C1 i l') == 'b u m e b i l')
+        assert(rule('b u m e C1 i C2') == 'b u m e b i n')
+        assert(rule('b u m e C1 i C2 u i t C1') == 'b u m e b i n u i t m')
+        assert(rule('b u m e') == 'b u m e')
+
+        # right-to-left (disharmony)
+        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, right_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
+        assert(rule('l i C2 u t e m u b') == 'l i n u t e m u b')
+        assert(rule('l i C1 e m u b') == 'l i b e m u b')
+        assert(rule('C2 i C1 e m u b') == 'n i b e m u b')
+        assert(rule('C1 t i u C2 i C1 e m u b') == 'm t i u n i b e m u b')
+        assert(rule('b u m e') == 'b u m e')
+
     def test_D2L_init(self):
         d2l = D2L(verbose=False)
         assert(d2l is not None)
