@@ -72,6 +72,53 @@ class TestD2L(unittest.TestCase):
         except ValueError as e:
             assert(e.__str__() == 'D2L Rule must have either left or right contexts.')
             assert(True)
+            
+    def test_rule__apply(self):
+        seginv = SegInv()
+        seginv.add_segs({'a', 'e', 'i', 'o', 'u', 'b', 'd', 'm', 'n', 'l'})
+        # make custom seg
+        features = dict(seginv['m'].features)
+        features['son'] = UNDERSPECIFIED
+        features['nas'] = UNDERSPECIFIED
+        seginv.add_custom('C1', features=features) # m ~ b
+        features = dict(seginv['n'].features)
+        features['son'] = UNDERSPECIFIED
+        features['nas'] = UNDERSPECIFIED
+        seginv.add_custom('C2', features=features) # n ~ d
+
+        tier = Tier(seginv=seginv, feats={'-syl'})
+        
+        # harmony
+        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
+
+        assert(rule._apply(seg=seginv['C1'], ctxt=seginv['m']) == 'm')
+        assert(rule._apply(seg=seginv['C1'], ctxt=seginv['n']) == 'm')
+
+        assert(rule._apply(seg=seginv['C1'], ctxt=seginv['b']) == 'b')
+        assert(rule._apply(seg=seginv['C1'], ctxt=seginv['d']) == 'b')
+
+        assert(rule._apply(seg=seginv['C2'], ctxt=seginv['m']) == 'n')
+        assert(rule._apply(seg=seginv['C2'], ctxt=seginv['n']) == 'n')
+
+        assert(rule._apply(seg=seginv['C2'], ctxt=seginv['b']) == 'd')
+        assert(rule._apply(seg=seginv['C2'], ctxt=seginv['d']) == 'd')
+
+
+        # disharmony
+        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
+
+        assert(rule._apply(seg=seginv['C1'], ctxt=seginv['m']) == 'b')
+        assert(rule._apply(seg=seginv['C1'], ctxt=seginv['n']) == 'b')
+
+        assert(rule._apply(seg=seginv['C1'], ctxt=seginv['b']) == 'm')
+        assert(rule._apply(seg=seginv['C1'], ctxt=seginv['d']) == 'm')
+
+        assert(rule._apply(seg=seginv['C2'], ctxt=seginv['m']) == 'd')
+        assert(rule._apply(seg=seginv['C2'], ctxt=seginv['n']) == 'd')
+
+        assert(rule._apply(seg=seginv['C2'], ctxt=seginv['b']) == 'n')
+        assert(rule._apply(seg=seginv['C2'], ctxt=seginv['d']) == 'n')
+
 
     def test_rule__predictions(self):
         seginv = SegInv()
