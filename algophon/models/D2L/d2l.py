@@ -3,8 +3,8 @@ from typing import Union, Iterable
 from collections import defaultdict
 
 from algophon import SegInv, SegStr
-from algophon.symbols import UNDERSPECIFIED
-from algophon.models.D2L import Discrepancy
+from algophon.symbols import UNDERSPECIFIED, LWB, RWB
+from algophon.models.D2L import Discrepancy, Rule, Tier
 
 class D2L:
     '''
@@ -54,7 +54,20 @@ class D2L:
         '''
         pairs = self._train_setup(pairs) # set everything up to train
 
-        return self
+        harmony_rule = self.build_rule(pairs=pairs)
+        disharmony_rule = self.build_rule(pairs=pairs, harmony=False)
+        if harmony_rule and not disharmony_rule: # if only harmony built a productive rule, use it
+            self.rule = harmony_rule
+        elif disharmony_rule and not harmony_rule: # if only disharmony built a productive rule, use it
+            self.rule = disharmony_rule
+        elif harmony_rule and disharmony_rule: # if both harmony and disharmony yield a rule, choose the more accurate
+            assim_acc, dissim_acc = harmony_rule.accuracy(self.pairs), disharmony_rule.accuracy(self.pairs)
+            self.rule = harmony_rule if assim_acc >= dissim_acc else disharmony_rule
+        else: # neither harmony nor disharmony built a productive rule
+            self.rule = None
+            self.default = None
+
+        return self # return trained object
 
     def produce(self, ur: Union[SegStr, str]) -> SegStr:
         '''
@@ -137,9 +150,47 @@ class D2L:
                 ur_seg, sr_seg = ur[i], sr[i] # extract segments
                 if ur_seg != sr_seg: # update discrepancy
                     feat_diff = tuple(sorted(self.seginv.feature_diff(ur_seg, sr_seg))) # compute feature diff
-                    if self._discrepancy is None: # init discrepanchy if it does not exist
+                    if self._discrepancy is None: # init discrepancy if it does not exist
                         self._discrepancy = Discrepancy(feat_diff)
                     # tabulate this pair's contribution to the discrepancy
                     self._discrepancy.tabulate(ur=ur, i=i, ur_seg=ur_seg, sr_seg=sr_seg)
 
         return setup_pairs
+    
+    def build_rule(self, pairs: set, delset: set=set(), harmony: bool=True, discrepancy: Union[None, Discrepancy]=None) -> Rule:
+        '''
+        Builds a rule recursively.
+
+        :pairs: a set of (UR, SR) pairs
+        :delset: (Optional; default set()) the segments to delete
+            - Updated recursively
+        :harmony: (Optional; default True) if True, builds a Haromny rule; if False, builds a Disharmony rule
+        :discrepancy: (Optional; default None) allows for providing a Discrepancy object
+            - Useful for running D2L multiple times for different discrepancies (e.g., as in PLP)
+        '''
+        if discrepancy is None: # use self._discrepancy by default
+            discrepancy = self._discrepancy
+
+        if harmony:
+            print(pairs)
+            lctxts, rctxts = self._get_tier_adj_contexts(discrepancy=discrepancy, tier=None)
+
+    def _get_tier_adj_contexts(self, discrepancy: Discrepancy, tier: Union[None, Tier]) -> tuple[set, set]:
+        '''
+        :discrepancy: a Discrepancy object, which stores the alternating URs
+        :tier: a Tier object (if None, will compute adj contexts over input representation)
+
+        :return: the left and right contexts :tier:-adjacent to the target (alternating) segments in the :pairs:
+        '''
+        URs = discrepancy.get_URs() # compute the alteranting URs
+        target = discrepancy.get_alternating_UR_segs() # compute the target (alternating) segments
+        left_ctxts, right_ctxts = set(), set() # init ctxt sets
+        for ur in URs: # iterate over URs
+            projected = tier.project(ur) if tier is not None else ur # project the tier (if there is one)
+            for i, seg in enumerate(projected):
+                if seg in target: # check if the seg is an alternating (target) seg
+                    # compute left context
+                    left_ctxts.add(projected[i - 1] if i > 0 else LWB)
+                    # compute right context
+                    right_ctxts.add(projected[i + 1] if i < len(projected) - 1 else RWB)
+        return left_ctxts, right_ctxts

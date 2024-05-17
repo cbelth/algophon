@@ -1,6 +1,6 @@
 from typing import Union
 
-from algophon import Seg, NatClass, SegInv
+from algophon import Seg, SegStr, NatClass, SegInv
 
 class Tier:
     def __init__(self, seginv: SegInv, feats: Union[NatClass, set, None]=None, segs: Union[set, None]=None) -> object:
@@ -40,3 +40,24 @@ class Tier:
     
     def __contains__(self, key: Union[str, Seg]) -> bool:
         return key in self._tierset
+    
+    def project(self, segstr: SegStr) -> SegStr:
+        '''
+        :segstr: a SegStr object to project the tier w.r.t
+
+        :return: a Tier.Projection object
+            - A sublcass of SegStr that includes a .idxs variable storing the indexes of the projected segments in the original SegStr
+        '''
+        if not isinstance(segstr, SegStr):
+            raise ValueError(f'Tier projection not implemented for segstr of type {type(segstr)}')
+        proj, idxs = list(), list()
+        for idx, seg in enumerate(segstr):
+            if seg in self:
+                proj.append(seg)
+                idxs.append(idx)
+        return Tier.Projection(segs=proj, idxs=idxs, seginv=self.seginv)
+    
+    class Projection(SegStr):
+        def __init__(self, segs, idxs, seginv):
+            self.idxs = idxs
+            super().__init__(segs=segs, seginv=seginv)

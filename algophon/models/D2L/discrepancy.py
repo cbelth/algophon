@@ -39,8 +39,14 @@ class Discrepancy:
         '''
         return set(it[0] for it in self.alternations).union(it[1] for it in self.alternations)
 
-    def get_alternating_URs(self) -> set:
+    def get_alternating_UR_segs(self) -> set:
         '''
         :return: a set of all the underling Seg objects that are involved in the alternation
         '''
         return set(it[0] for it in self.alternations)
+    
+    def get_URs(self) -> set:
+        '''
+        :return: a set of all the URs that are involved in the alternation
+        '''
+        return set(it[0] for it in self.instances)
