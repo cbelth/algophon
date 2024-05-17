@@ -42,18 +42,34 @@ class Rule:
         self.harmony = harmony
 
     def __str__(self) -> str:
+        feat_str = '{' + ','.join(sorted(self.features)) + '}'
+        adj_str = f'Agree({self.target},{feat_str})' if self.harmony else f'Disagree({self.target},{feat_str})'
         tier_str = f' {FUNCTION_COMPOSITION} proj({self.tier})' if self.tier is not None else ''
         if self.left_to_right:
-            return f'{self.target} -> / {self.left_ctxts} __{tier_str}'
+            return f'{adj_str} / {self.left_ctxts} __{tier_str}'
         else:
-            return f'{self.target} -> / __ {self.right_ctxts}{tier_str}'
+            return f'{adj_str} / __ {self.right_ctxts}{tier_str}'
 
     def __repr__(self) -> str:
         return self.__str__()
     
-    def produce(self) -> SegStr:
-        # TODO
-        pass
+    def produce(self, ur: Union[str, SegStr]) -> SegStr:
+        '''
+        Produces a SR for and input UR
+
+        :ur: the UR to produce an SR for. Can be:
+            - space-separated str of IPA symbols
+            - SegStr object
+        
+        :return: a SegStr representing the predicted SR
+        '''
+        if isinstance(ur, str): # convert str ur to SegStr
+            ur = SegStr(ur, seginv=self.seginv)
+        new_segs = list(ur._segs) # init new seg list
+        # apply predictions
+        for idx, seg in self._predictions(segstr=ur):
+            new_segs[idx] = seg
+        return SegStr(segs=new_segs, seginv=self.seginv) # return SegStr object
 
     # calling a Rule object amounts to calling its produce() method
     __call__ = produce

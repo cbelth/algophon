@@ -149,7 +149,7 @@ class D2L:
             for i in range(len(ur)):
                 ur_seg, sr_seg = ur[i], sr[i] # extract segments
                 if ur_seg != sr_seg: # update discrepancy
-                    feat_diff = tuple(sorted(self.seginv.feature_diff(ur_seg, sr_seg))) # compute feature diff
+                    feat_diff = self.seginv.feature_diff(ur_seg, sr_seg) # compute feature diff
                     if self._discrepancy is None: # init discrepancy if it does not exist
                         self._discrepancy = Discrepancy(feat_diff)
                     # tabulate this pair's contribution to the discrepancy
@@ -175,8 +175,8 @@ class D2L:
         if harmony: # TODO remove condition
             print(pairs)
             lctxts, rctxts = self._get_tier_adj_contexts(discrepancy=discrepancy, tier=None)
-            left_rule = Rule(seginv=self.seginv, target=target, left_ctxts=lctxts, harmony=harmony)
-            right_rule = Rule(seginv=self.seginv, target=target, right_ctxts=rctxts, harmony=harmony)
+            left_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, left_ctxts=lctxts, harmony=harmony)
+            right_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, right_ctxts=rctxts, harmony=harmony)
             print(left_rule)
             print(right_rule)
 
