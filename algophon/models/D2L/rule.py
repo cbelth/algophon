@@ -36,7 +36,7 @@ class Rule:
         if left_ctxts is None and right_ctxts is None:
             raise ValueError('D2L Rule must have either left or right contexts.')
         if defaults is not None and not all(feat in defaults for feat in features):
-            raise ValueError(':defaults: must include one value per :feature:')
+            raise ValueError(':defaults: must include one value per :features:')
         # init variables
         self.seginv = seginv
         self.target = target
@@ -156,6 +156,8 @@ class Rule:
         return self._lookup_by_features(features=features, seg=seg)
     
     def _lookup_by_features(self, features: dict, seg: Seg) -> Seg:
+        '''
+        '''
         # compute vec_to_seg dict
         vec_to_seg = dict((','.join(list(f'{val}{feat}' for feat, val in _seg.features.items())), _seg) for _seg in self.seginv.segs)
         # compute vec
@@ -163,6 +165,8 @@ class Rule:
         return vec_to_seg[vec] if vec in vec_to_seg else seg
     
     def underextension_SRs(self, pairs: Iterable):
+        '''
+        '''
         underex = defaultdict(int)
         for ur, sr in pairs:
             pred = self.produce(ur=ur)
@@ -170,4 +174,8 @@ class Rule:
                 if seg in self.target: # underextended
                     underex[sr_seg] += 1
         return underex
-
+    
+    def set_defaults(self, defaults: dict):
+        if defaults is not None and not all(feat in defaults for feat in self.features):
+            raise ValueError(':defaults: must include one value per :self.features:')
+        self.defaults = defaults

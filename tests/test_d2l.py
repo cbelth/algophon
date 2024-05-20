@@ -357,6 +357,23 @@ class TestD2L(unittest.TestCase):
         rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=strid, tier=tier)
         assert(rule.underextension_SRs(pairs) == {'s': 3, 'ʃ': 1})
 
+    def test_rule_set_defaults(self):
+        seginv = SegInv()
+        seginv.add_segs({'s', 'ʃ'})
+        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts={'s', 'ʃ'})
+        assert(rule.defaults is None)
+        rule.set_defaults(defaults={'ant': seginv['s'].features['ant'], 'distr': seginv['s'].features['distr']})
+        assert(len(rule.defaults) == 2)
+        assert(rule.defaults['ant'] == seginv['s'].features['ant'])
+        assert(rule.defaults['distr'] == seginv['s'].features['distr'])
+        
+        try:
+            rule.set_defaults(defaults={'ant': '+'})
+            assert(False)
+        except ValueError as e:
+            assert(True)
+            assert(e.__str__() == ':defaults: must include one value per :self.features:')
+
     def test_D2L_init(self):
         d2l = D2L(verbose=False)
         assert(d2l is not None)
