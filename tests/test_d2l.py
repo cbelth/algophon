@@ -229,6 +229,35 @@ class TestD2L(unittest.TestCase):
         segstr = SegStr('b u m e', seginv=seginv)
         assert(rule._predictions(segstr) == [])
 
+        # test default application
+        pairs = [
+            ('ʃ o k u S i S', 'ʃ o k u ʃ i ʃ'), 
+            ('a p ʃ a S', 'a p ʃ a ʃ'),
+            ('ʃ u n i S', 'ʃ u n i ʃ'),
+            ('s o k i S', 's o k i s'),
+            ('s i g o S i S', 's i g o s i s'),
+            ('u t S', 'u t s')
+        ]
+        d2l = D2L(verbose=False)
+        pairs = d2l._train_setup(pairs)
+        seginv = d2l.seginv
+        # overwrite weird Panphon values
+        seginv['s'].features['strid'] = '+'
+        seginv['ʃ'].features['strid'] = '+'
+        seginv['S'].features['strid'] = '+'
+
+        strid = NatClass(feats={'+strid'}, seginv=seginv)
+        tier = Tier(seginv=seginv, feats=strid)
+        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, defaults={'ant': '+', 'distr': '-'}, left_ctxts=strid, tier=tier)
+        assert(rule._predictions(SegStr('ʃ o k u S i S', seginv=seginv)) == [(4, 'ʃ'), (6, 'ʃ')])
+        assert(rule._predictions(SegStr('u t S', seginv=seginv)) == [(2, 's')])
+
+        cons = NatClass(feats={'+cons'}, seginv=seginv)
+        tier = Tier(seginv=seginv, feats=cons)
+        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=cons, tier=tier)
+        assert(rule._predictions(SegStr('ʃ o k u S i S', seginv=seginv)) == [(4, 'S'), (6, 'S')])
+        assert(rule._predictions(SegStr('u t S', seginv=seginv)) == [(2, 's')])
+
     def test_rule_produce(self):
         seginv = SegInv()
         seginv.add_segs({'a', 'e', 'i', 'o', 'u', 'b', 'd', 'm', 'n', 'l'})
@@ -293,6 +322,9 @@ class TestD2L(unittest.TestCase):
         seginv['ʃ'].features['strid'] = '+'
         seginv['S'].features['strid'] = '+'
 
+        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=seginv.segs)
+        assert(rule.tsp_stats(pairs) == (8, 1))
+
         cons = NatClass(feats={'+cons'}, seginv=seginv)
         tier = Tier(seginv=seginv, feats=cons)
         rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=cons, tier=tier)
@@ -300,8 +332,7 @@ class TestD2L(unittest.TestCase):
 
         strid = NatClass(feats={'+strid'}, seginv=seginv)
         tier = Tier(seginv=seginv, feats=strid)
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=strid, tier=tier)
-        print(rule.tsp_stats(pairs))
+        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, defaults={'ant': '+', 'distr': '-'}, left_ctxts=strid, tier=tier)
         assert(rule.tsp_stats(pairs) == (8, 8))
 
     def test_D2L_init(self):

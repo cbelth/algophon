@@ -112,29 +112,19 @@ class Rule:
             - Each item in the list is a tuple (index, new_seg) specifying each new_seg value predicted and at what index
         '''
         preds = list() # to store predictions
-        projection = self.tier.project(segstr=segstr) if self.tier is not None else segstr
+        projection = self.tier.project(segstr=segstr) if self.tier is not None else SegStr(list(segstr._segs), seginv=self.seginv)
         tier_ptr = 0 if self.left_to_right else len(projection) - 1 # init a tier pointer
         while 0 <= tier_ptr <= len(projection) - 1:
             seg = projection[tier_ptr]
             if seg in self.target:
                 if self.left_to_right: # left ctxt case
-                    ctxt = projection[tier_ptr - 1] if tier_ptr > 0 else LWB
-                    if ctxt in self.left_ctxts: # rule applies
-                        new_seg = self._apply(seg=seg, ctxt=ctxt)
-                    else: # rule does not apply; use default
-                        pass # TODO
-                        new_seg = seg
-                    preds.append((projection.idxs[tier_ptr], new_seg))
-                    projection._segs[tier_ptr] = new_seg # update tier (iterative application)
+                    ctxt = projection[tier_ptr - 1] if tier_ptr > 0 else LWB # compute ctxt
+                    new_seg = self._apply(seg=seg, ctxt=ctxt) if ctxt in self.left_ctxts else self._apply_default(seg=seg) # compute new seg
                 else: # right ctxt case
-                    ctxt = projection[tier_ptr + 1] if tier_ptr < len(projection) - 1 else RWB
-                    if ctxt in self.right_ctxts: # rule applies
-                        new_seg = self._apply(seg=seg, ctxt=ctxt)
-                        preds.append((projection.idxs[tier_ptr], new_seg))
-                        projection._segs[tier_ptr] = new_seg # update tier (iterative application)
-                    else: # rule does not apply; use default
-                        pass # TODO
-                        new_seg = seg
+                    ctxt = projection[tier_ptr + 1] if tier_ptr < len(projection) - 1 else RWB # compute ctxt
+                    new_seg = self._apply(seg=seg, ctxt=ctxt) if ctxt in self.right_ctxts else self._apply_default(seg=seg) # compute new seg
+                preds.append((projection.idxs[tier_ptr] if self.tier is not None else tier_ptr, new_seg))
+                projection._segs[tier_ptr] = new_seg # update tier (iterative application)
             tier_ptr += 1 if self.left_to_right else -1 # move tier pointer
         return preds
     

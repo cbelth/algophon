@@ -21,8 +21,8 @@ class D2L:
     }
     '''
 
-    def __init__(self, seginv: Union[None, SegInv]=None, verbose=True) -> object:
-        self.seginv = seginv if seginv is not None else SegInv()
+    def __init__(self, verbose: bool=True) -> object:
+        self.seginv = SegInv(add_boundary_symbols=True)
         self.verbose = verbose
 
         self._discrepancy = None # the discrepancy to account for
@@ -173,12 +173,12 @@ class D2L:
         target = discrepancy.get_alternating_UR_segs() # compute target segs
 
         if harmony: # TODO remove condition
-            print(pairs)
+            # print(pairs)
             lctxts, rctxts = self._get_tier_adj_contexts(discrepancy=discrepancy, tier=None)
             left_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, left_ctxts=lctxts, harmony=harmony)
             right_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, right_ctxts=rctxts, harmony=harmony)
-            print(left_rule)
-            print(right_rule)
+            # print(left_rule)
+            # print(right_rule)
 
     def _get_tier_adj_contexts(self, discrepancy: Discrepancy, tier: Union[None, Tier]) -> tuple[set, set]:
         '''
