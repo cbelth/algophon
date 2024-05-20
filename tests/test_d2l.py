@@ -119,6 +119,24 @@ class TestD2L(unittest.TestCase):
         assert(rule._apply(seg=seginv['C2'], ctxt=seginv['b']) == 'n')
         assert(rule._apply(seg=seginv['C2'], ctxt=seginv['d']) == 'n')
 
+    def test_rule__apply_default(self):
+        seginv = SegInv()
+        seginv.add_segs({'a', 'e', 'i', 'o', 'u', 'b', 'd', 'm', 'n', 'l'})
+        # make custom seg
+        features = dict(seginv['m'].features)
+        features['son'] = UNDERSPECIFIED
+        features['nas'] = UNDERSPECIFIED
+        seginv.add_custom('C1', features=features) # m ~ b
+        features = dict(seginv['n'].features)
+        features['son'] = UNDERSPECIFIED
+        features['nas'] = UNDERSPECIFIED
+        seginv.add_custom('C2', features=features) # n ~ d
+        
+        # harmony
+        rule = Rule(seginv=seginv, features={'son', 'nas'}, defaults={'son': '-', 'nas': '-'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv))
+
+        assert(rule._apply_default(seg=seginv['C1']) == 'b')
+        assert(rule._apply_default(seg=seginv['C2']) == 'd')
 
     def test_rule__predictions(self):
         seginv = SegInv()
@@ -257,6 +275,34 @@ class TestD2L(unittest.TestCase):
         assert(rule('C2 i C1 e m u b') == 'n i b e m u b')
         assert(rule('C1 t i u C2 i C1 e m u b') == 'm t i u n i b e m u b')
         assert(rule('b u m e') == 'b u m e')
+
+    def test_rule_tsp_stats(self):
+        pairs = [
+            ('ʃ o k u S i S', 'ʃ o k u ʃ i ʃ'), 
+            ('a p ʃ a S', 'a p ʃ a ʃ'),
+            ('ʃ u n i S', 'ʃ u n i ʃ'),
+            ('s o k i S', 's o k i s'),
+            ('s i g o S i S', 's i g o s i s'),
+            ('u t S', 'u t s')
+        ]
+        d2l = D2L(verbose=False)
+        pairs = d2l._train_setup(pairs)
+        seginv = d2l.seginv
+        # overwrite weird Panphon values
+        seginv['s'].features['strid'] = '+'
+        seginv['ʃ'].features['strid'] = '+'
+        seginv['S'].features['strid'] = '+'
+
+        cons = NatClass(feats={'+cons'}, seginv=seginv)
+        tier = Tier(seginv=seginv, feats=cons)
+        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=cons, tier=tier)
+        assert(rule.tsp_stats(pairs) == (8, 2)) # this is diff from paper b.c. the feature specificaions involve distr, which is 0 for /k/
+
+        strid = NatClass(feats={'+strid'}, seginv=seginv)
+        tier = Tier(seginv=seginv, feats=strid)
+        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=strid, tier=tier)
+        print(rule.tsp_stats(pairs))
+        assert(rule.tsp_stats(pairs) == (8, 8))
 
     def test_D2L_init(self):
         d2l = D2L(verbose=False)

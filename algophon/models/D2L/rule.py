@@ -9,6 +9,7 @@ class Rule:
                  seginv: SegInv,
                  target: set,
                  features: set,
+                 defaults: Union[None, dict]=None,
                  left_ctxts: Union[None, set, NatClass]=None, 
                  right_ctxts: Union[None, set, NatClass]=None,
                  tier: Union[None, Tier]=None,
@@ -17,6 +18,7 @@ class Rule:
         :seginv: a SegInv object
         :target: a set of target (alternating) segments
         :features: a set of features that alternate
+        :defaults: the values to use for :features: if no ctxt matches for a particular target.
         :left_ctxts: (optional; default None) a set of right-adj (to target) segments that trigger rule application
             - Can be a set of specific segments or a NatClass object
         :right_ctxts: (optional; default None) a set of left-adj (to target) segments that trigger a rule application
@@ -31,10 +33,13 @@ class Rule:
             raise ValueError('D2L Rule cannot have both left and right contexts.')
         if left_ctxts is None and right_ctxts is None:
             raise ValueError('D2L Rule must have either left or right contexts.')
+        if defaults is not None and not all(feat in defaults for feat in features):
+            raise ValueError(':defaults: must include one value per :feature:')
         # init variables
         self.seginv = seginv
         self.target = target
         self.features = features
+        self.defaults = defaults
         self.left_ctxts = left_ctxts
         self.right_ctxts = right_ctxts
         self.left_to_right = self.left_ctxts is not None # compute whether rule applies left-to-right or right-to-left
@@ -75,8 +80,29 @@ class Rule:
     __call__ = produce
     
     def accuracy(self, pairs: Iterable) -> float:
+        '''
+        '''
         # TODO
         pass
+
+    def tsp_stats(self, pairs: Iterable) -> tuple[int, int]:
+        '''
+        Computes n and m for the TSP w.r.t a set of pairs
+
+        :pairs: an iterable of (UR, SR) pairs to compute the TSP stats for
+            - Computed over unique pairs
+        
+        :return: n and m
+        '''
+        n, m = 0, 0
+        for ur, sr in set(pairs):
+            if isinstance(ur, str):
+                ur = SegStr(ur, seginv=self.seginv)
+            for idx, pred_sr_seg in self._predictions(ur):
+                n += 1
+                if sr[idx] == pred_sr_seg:
+                    m += 1
+        return n, m
 
     def _predictions(self, segstr: SegStr) -> list:
         '''
@@ -95,10 +121,11 @@ class Rule:
                     ctxt = projection[tier_ptr - 1] if tier_ptr > 0 else LWB
                     if ctxt in self.left_ctxts: # rule applies
                         new_seg = self._apply(seg=seg, ctxt=ctxt)
-                        preds.append((projection.idxs[tier_ptr], new_seg))
-                        projection._segs[tier_ptr] = new_seg # update tier (iterative application)
                     else: # rule does not apply; use default
                         pass # TODO
+                        new_seg = seg
+                    preds.append((projection.idxs[tier_ptr], new_seg))
+                    projection._segs[tier_ptr] = new_seg # update tier (iterative application)
                 else: # right ctxt case
                     ctxt = projection[tier_ptr + 1] if tier_ptr < len(projection) - 1 else RWB
                     if ctxt in self.right_ctxts: # rule applies
@@ -107,6 +134,7 @@ class Rule:
                         projection._segs[tier_ptr] = new_seg # update tier (iterative application)
                     else: # rule does not apply; use default
                         pass # TODO
+                        new_seg = seg
             tier_ptr += 1 if self.left_to_right else -1 # move tier pointer
         return preds
     
@@ -122,8 +150,21 @@ class Rule:
         else:
             rev_val = {'+': '-', '-': '+'}
             features = dict((feat, val if feat not in self.features else rev_val[ctxt.features[feat]]) for feat, val in seg.features.items())
+        return self._lookup_by_features(features=features, seg=seg)
+    
+    def _apply_default(self, seg: Seg) -> Seg:
+        '''
+        :seg: a Seg object
+
+        :return: a Seg like :seg:, but with self.features set to self.defaults values
+        '''
+        features = dict((feat, val if feat not in self.features else self.defaults[feat]) for feat, val in seg.features.items())
+        return self._lookup_by_features(features=features, seg=seg)
+    
+    def _lookup_by_features(self, features: dict, seg: Seg) -> Seg:
         # compute vec_to_seg dict
         vec_to_seg = dict((','.join(list(f'{val}{feat}' for feat, val in _seg.features.items())), _seg) for _seg in self.seginv.segs)
         # compute vec
         vec = ','.join(list(f'{val}{feat}' for feat, val in features.items()))
         return vec_to_seg[vec] if vec in vec_to_seg else seg
+
