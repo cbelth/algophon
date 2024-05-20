@@ -335,6 +335,28 @@ class TestD2L(unittest.TestCase):
         rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, defaults={'ant': '+', 'distr': '-'}, left_ctxts=strid, tier=tier)
         assert(rule.tsp_stats(pairs) == (8, 8))
 
+    def test_rule_underextension_SRs(self):
+        pairs = [
+            ('ʃ o k u S i S', 'ʃ o k u ʃ i ʃ'), 
+            ('a p a S', 'a p a s'),
+            ('u n i S', 'u n i s'),
+            ('s o k i S', 's o k i s'),
+            ('i g o i S', 'i g o i ʃ'),
+            ('u t S', 'u t s')
+        ]
+        d2l = D2L(verbose=False)
+        pairs = d2l._train_setup(pairs)
+        seginv = d2l.seginv
+        # overwrite weird Panphon values
+        seginv['s'].features['strid'] = '+'
+        seginv['ʃ'].features['strid'] = '+'
+        seginv['S'].features['strid'] = '+'
+
+        strid = NatClass(feats={'+strid'}, seginv=seginv)
+        tier = Tier(seginv=seginv, feats=strid)
+        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=strid, tier=tier)
+        assert(rule.underextension_SRs(pairs) == {'s': 3, 'ʃ': 1})
+
     def test_D2L_init(self):
         d2l = D2L(verbose=False)
         assert(d2l is not None)

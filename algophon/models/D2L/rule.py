@@ -1,5 +1,7 @@
 from typing import Iterable, Union
 
+from collections import defaultdict
+
 from algophon import Seg, SegInv, NatClass, SegStr
 from algophon.symbols import FUNCTION_COMPOSITION, LWB, RWB, UNK
 from algophon.models.D2L import Tier
@@ -148,6 +150,8 @@ class Rule:
 
         :return: a Seg like :seg:, but with self.features set to self.defaults values
         '''
+        if self.defaults is None: # if no default is provided, there is nothing we can do
+            return seg
         features = dict((feat, val if feat not in self.features else self.defaults[feat]) for feat, val in seg.features.items())
         return self._lookup_by_features(features=features, seg=seg)
     
@@ -157,4 +161,13 @@ class Rule:
         # compute vec
         vec = ','.join(list(f'{val}{feat}' for feat, val in features.items()))
         return vec_to_seg[vec] if vec in vec_to_seg else seg
+    
+    def underextension_SRs(self, pairs: Iterable):
+        underex = defaultdict(int)
+        for ur, sr in pairs:
+            pred = self.produce(ur=ur)
+            for seg, sr_seg in zip(pred, sr):
+                if seg in self.target: # underextended
+                    underex[sr_seg] += 1
+        return underex
 
