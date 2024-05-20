@@ -1,6 +1,6 @@
 from algophon.seg import Seg
 from algophon.natclass import NatClass
-from algophon.symbols import UNDERSPECIFIED
+from algophon.symbols import UNDERSPECIFIED, LWB, RWB, SYLB, MORPHB
 
 import pkgutil
 
@@ -9,21 +9,23 @@ class SegInv:
     A class representing an inventory of phonological segments (Seg objects).
     '''
     def __init__(self, 
+                 add_boundary_symbols: bool=False,
                  ipa_file_path: str=None, 
                  sep: str='\t'
-        ):
+        ) -> object:
         self._ipa_source = f'Panphon (https://github.com/dmort27/panphon)' if ipa_file_path is None else ipa_file_path
+        self._add_boundary_symbols = add_boundary_symbols
         self.ipa_file_path = ipa_file_path # uses Panphon features (https://github.com/dmort27/panphon) by default
         self.sep = sep
+
+        # stores the Seg objects in the SegInv
+        self.segs = set()
+        # maps ipa symbols to their Seg object in the SegInv
+        self._ipa_to_seg = dict()
 
         # load the _seg_to_feat_vec map
         self._load_seg_to_feat_dict()
 
-        # stores the Seg objects in the SegInv
-        self.segs = set()
-
-        # maps ipa symbols to their Seg object in the SegInv
-        self._ipa_to_seg = dict()
 
     def __str__(self) -> str:
         return f'SegInv of size {len(self)}'
@@ -74,11 +76,20 @@ class SegInv:
             if i == 0: # extract the header
                 self.feature_space = feats
             else: # add the segment to the dict
+                if self._add_boundary_symbols:
+                    feats += ['-', '-', '-', '-', '-']
                 self._seg_to_feat_vec[seg] = feats
 
         if self.ipa_file_path is None:
             # make ord('g') == 103 and ord('ɡ') == 609 the same, since panphon only as 609
             self._seg_to_feat_vec['g'] = self._seg_to_feat_vec['ɡ']
+
+        if self._add_boundary_symbols: # add boundary symbols
+            self.feature_space += ['B', 'LWB', 'RWB', 'SYLB', 'MORPHB']
+            for boundary_feat, symbol in zip(['LWB', 'RWB', 'SYLB', 'MORPHB'], 
+                                             [LWB,    RWB,   SYLB,   MORPHB]):
+                feats = dict((feat, UNDERSPECIFIED if feat not in {'B', 'LWB', 'RWB', 'SYLB', 'MORPHB'} else '+' if feat in {'B', boundary_feat} else '-') for feat in self.feature_space)
+                self.add_custom(symbol=symbol, features=feats)
 
     def add(self, ipa_seg: str) -> None:
         '''

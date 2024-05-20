@@ -2,12 +2,28 @@ import unittest
 import sys
 sys.path.append('../')
 from algophon.seginv import SegInv
-from algophon.symbols import UNDERSPECIFIED
+from algophon.symbols import UNDERSPECIFIED, LWB
 
 class TestSegInv(unittest.TestCase):
     def test_init(self):
         seginv = SegInv()
         assert(seginv is not None)
+
+    def test_init_boundary(self):
+        seginv = SegInv(add_boundary_symbols=True)
+        assert(len(seginv) == 4)
+        assert(seginv.feature_space[-5:] == ['B', 'LWB', 'RWB', 'SYLB', 'MORPHB'])
+        assert(seginv[LWB].features['B'] == '+')
+        assert(seginv[LWB].features['syl'] == UNDERSPECIFIED)
+        assert(seginv[LWB].features['LWB'] == '+')
+        assert(seginv[LWB].features['RWB'] == '-')
+
+        seginv.add('i')
+        assert(seginv['i'].features['B'] == '-')
+        assert(seginv['i'].features['syl'] == '+')
+        assert(seginv['i'].features['LWB'] == '-')
+        assert(seginv['i'].features['RWB'] == '-')
+
 
     def test_add(self):
         seginv = SegInv()
