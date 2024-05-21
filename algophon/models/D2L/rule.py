@@ -83,9 +83,13 @@ class Rule:
     
     def accuracy(self, pairs: Iterable) -> float:
         '''
+        :pairs: an iterable of (UR, SR) pairs to compute the TSP stats for
+            - Computed over unique pairs
+
+        :return: the accuracy of the rule's predictions of the :pairs:
         '''
-        # TODO
-        pass
+        n, m = self.tsp_stats(pairs=pairs)
+        return m / n
 
     def tsp_stats(self, pairs: Iterable) -> tuple[int, int]:
         '''
@@ -120,10 +124,10 @@ class Rule:
             seg = projection[tier_ptr]
             if seg in self.target:
                 if self.left_to_right: # left ctxt case
-                    ctxt = projection[tier_ptr - 1] if tier_ptr > 0 else LWB # compute ctxt
+                    ctxt = projection[tier_ptr - 1] if tier_ptr > 0 else self.seginv[LWB] # compute ctxt
                     new_seg = self._apply(seg=seg, ctxt=ctxt) if ctxt in self.left_ctxts else self._apply_default(seg=seg) # compute new seg
                 else: # right ctxt case
-                    ctxt = projection[tier_ptr + 1] if tier_ptr < len(projection) - 1 else RWB # compute ctxt
+                    ctxt = projection[tier_ptr + 1] if tier_ptr < len(projection) - 1 else self.seginv[RWB] # compute ctxt
                     new_seg = self._apply(seg=seg, ctxt=ctxt) if ctxt in self.right_ctxts else self._apply_default(seg=seg) # compute new seg
                 preds.append((projection.idxs[tier_ptr] if self.tier is not None else tier_ptr, new_seg))
                 projection._segs[tier_ptr] = new_seg # update tier (iterative application)
@@ -164,18 +168,52 @@ class Rule:
         vec = ','.join(list(f'{val}{feat}' for feat, val in features.items()))
         return vec_to_seg[vec] if vec in vec_to_seg else seg
     
-    def underextension_SRs(self, pairs: Iterable):
+    def underextension_SRs(self, pairs: Iterable) -> defaultdict:
         '''
+        :pairs: an iterable of (UR, SR) pairs to compute the TSP stats for
+            - Computed over unique pairs
+
+        :return: a defaultdict mapping each underextended SR realization to its frequency
         '''
         underex = defaultdict(int)
-        for ur, sr in pairs:
+        for ur, sr in set(pairs):
             pred = self.produce(ur=ur)
             for seg, sr_seg in zip(pred, sr):
                 if seg in self.target: # underextended
                     underex[sr_seg] += 1
         return underex
     
-    def set_defaults(self, defaults: dict):
+    def set_defaults(self, defaults: dict) -> None:
+        '''
+        :defaults: the values to use for :self.features: if no ctxt matches for a particular target
+
+        :return: None
+        '''
         if defaults is not None and not all(feat in defaults for feat in self.features):
             raise ValueError(':defaults: must include one value per :self.features:')
         self.defaults = defaults
+
+    def errant_ctxts(self, pairs: Iterable) -> set:
+        '''
+        :pairs: an iterable of (UR, SR) pairs to compute the TSP stats for
+            - Computed over unique pairs
+        '''
+        err = set()
+        for ur, sr in set(pairs):
+            preds = self._predictions(segstr=ur)
+            projection = self.tier.project(segstr=ur) if self.tier is not None else SegStr(list(ur._segs), seginv=self.seginv)
+            tier_target_idxs = list(idx for idx, seg in enumerate(projection) if seg in self.target)
+            for tier_ptr, pred in zip(tier_target_idxs, preds):
+                str_ptr, new_seg = pred
+                if new_seg != sr[str_ptr]:
+                    if self.left_to_right: # left ctxt case
+                        ctxt = projection[tier_ptr - 1] if tier_ptr > 0 else self.seginv[LWB] # compute ctxt
+                        if ctxt in self.left_ctxts: # ignore default preds
+                            err.add(ctxt)
+                    else: # right ctxt case
+                        ctxt = projection[tier_ptr + 1] if tier_ptr < len(projection) - 1 else self.seginv[RWB] # compute ctxt
+                        if ctxt in self.right_ctxts:
+                            err.add(ctxt) # ignore default preds        
+                    projection._segs[tier_ptr] = new_seg # update tier (iterative application)
+        return err.difference({LWB, RWB})
+                

@@ -374,6 +374,39 @@ class TestD2L(unittest.TestCase):
             assert(True)
             assert(e.__str__() == ':defaults: must include one value per :self.features:')
 
+    def test_rule_errant_ctxts(self):
+        pairs = [
+            ('ʃ o k u S i S', 'ʃ o k u ʃ i ʃ'), 
+            ('a p ʃ a S', 'a p ʃ a ʃ'),
+            ('ʃ u n i S', 'ʃ u n i ʃ'),
+            ('s o k i S', 's o k i s'),
+            ('s i g o S i S', 's i g o s i s'),
+            ('u t S', 'u t s')
+        ]
+        d2l = D2L(verbose=False)
+        pairs = d2l._train_setup(pairs)
+        seginv = d2l.seginv
+        # overwrite weird Panphon values
+        seginv['s'].features['strid'] = '+'
+        seginv['ʃ'].features['strid'] = '+'
+        seginv['S'].features['strid'] = '+'
+        seginv['s'].features['distr'] = '+'
+        seginv['ʃ'].features['distr'] = '+'
+        seginv['S'].features['distr'] = '+'
+
+        rule = Rule(seginv=seginv, target={'S'}, features={'ant'}, left_ctxts=seginv.segs)
+        assert(rule.errant_ctxts(pairs) == {'u', 'i', 'a', 'o'})
+
+        cons = NatClass(feats={'+cons'}, seginv=seginv)
+        tier = Tier(seginv=seginv, feats=cons)
+        rule = Rule(seginv=seginv, target={'S'}, features={'ant'}, left_ctxts=cons, tier=tier)
+        assert(rule.errant_ctxts(pairs) == {'n', 'k', 'g', 'ʃ'})
+
+        strid = NatClass(feats={'+strid'}, seginv=seginv)
+        tier = Tier(seginv=seginv, feats=strid)
+        rule = Rule(seginv=seginv, target={'S'}, features={'ant'}, defaults={'ant': '+'}, left_ctxts=strid, tier=tier)
+        assert(rule.errant_ctxts(pairs) == set())
+
     def test_D2L_init(self):
         d2l = D2L(verbose=False)
         assert(d2l is not None)

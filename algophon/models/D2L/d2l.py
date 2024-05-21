@@ -5,6 +5,7 @@ from collections import defaultdict
 from algophon import SegInv, SegStr
 from algophon.symbols import UNDERSPECIFIED, LWB, RWB
 from algophon.models.D2L import Discrepancy, Rule, Tier
+from algophon.utils import tsp
 
 class D2L:
     '''
@@ -56,6 +57,7 @@ class D2L:
 
         harmony_rule = self.build_rule(pairs=pairs)
         disharmony_rule = self.build_rule(pairs=pairs, harmony=False)
+        print(f'Harmony: {harmony_rule}')
         if harmony_rule and not disharmony_rule: # if only harmony built a productive rule, use it
             self.rule = harmony_rule
         elif disharmony_rule and not harmony_rule: # if only disharmony built a productive rule, use it
@@ -172,13 +174,23 @@ class D2L:
             discrepancy = self._discrepancy
         target = discrepancy.get_alternating_UR_segs() # compute target segs
 
-        if harmony: # TODO remove condition
-            # print(pairs)
-            lctxts, rctxts = self._get_tier_adj_contexts(discrepancy=discrepancy, tier=None)
-            left_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, left_ctxts=lctxts, harmony=harmony)
-            right_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, right_ctxts=rctxts, harmony=harmony)
-            # print(left_rule)
-            # print(right_rule)
+        if not harmony: # TODO implement disharmony
+            return
+
+        lctxts, rctxts = self._get_tier_adj_contexts(discrepancy=discrepancy, tier=None) # compute ctxts
+        # build left rule
+        left_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, left_ctxts=lctxts, harmony=harmony)
+        left_default_sr = sorted(left_rule.underextension_SRs(pairs=pairs).items(), reverse=True, key=lambda it: it[-1])[0][0]
+        left_rule.set_defaults(dict((feat, left_default_sr.features[feat]) for feat in discrepancy.feature_diff))
+        # build right rule
+        right_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, right_ctxts=rctxts, harmony=harmony)
+        right_default_sr = sorted(right_rule.underextension_SRs(pairs=pairs).items(), reverse=True, key=lambda it: it[-1])[0][0]
+        right_rule.set_defaults(dict((feat, right_default_sr.features[feat]) for feat in discrepancy.feature_diff))
+
+        rule = left_rule if left_rule.accuracy(pairs=pairs) >= right_rule.accuracy(pairs=pairs) else right_rule
+        n, m = rule.tsp_stats(pairs=pairs)
+        if tsp(n=n, m=m):
+            return rule
 
     def _get_tier_adj_contexts(self, discrepancy: Discrepancy, tier: Union[None, Tier]) -> tuple[set, set]:
         '''
@@ -195,7 +207,7 @@ class D2L:
             for i, seg in enumerate(projected):
                 if seg in target: # check if the seg is an alternating (target) seg
                     # compute left context
-                    left_ctxts.add(projected[i - 1] if i > 0 else LWB)
+                    left_ctxts.add(projected[i - 1] if i > 0 else self.seginv[LWB])
                     # compute right context
-                    right_ctxts.add(projected[i + 1] if i < len(projected) - 1 else RWB)
+                    right_ctxts.add(projected[i + 1] if i < len(projected) - 1 else self.seginv[RWB])
         return left_ctxts, right_ctxts
