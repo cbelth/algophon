@@ -83,7 +83,7 @@ class Rule:
     
     def accuracy(self, pairs: Iterable) -> float:
         '''
-        :pairs: an iterable of (UR, SR) pairs to compute the TSP stats for
+        :pairs: an iterable of (UR, SR) pairs to compute accuracy for
             - Computed over unique pairs
 
         :return: the accuracy of the rule's predictions of the :pairs:
@@ -104,6 +104,8 @@ class Rule:
         for ur, sr in set(pairs):
             if isinstance(ur, str):
                 ur = SegStr(ur, seginv=self.seginv)
+            if isinstance(sr, str):
+                sr = SegStr(sr, seginv=self.seginv)
             for idx, pred_sr_seg in self._predictions(ur):
                 n += 1
                 if sr[idx] == pred_sr_seg:

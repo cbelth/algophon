@@ -2,8 +2,8 @@ from typing import Union, Iterable
 
 from collections import defaultdict
 
-from algophon import SegInv, SegStr
-from algophon.symbols import UNDERSPECIFIED, LWB, RWB
+from algophon import SegInv, SegStr, NatClass
+from algophon.symbols import UNDERSPECIFIED, LWB, RWB, MORPHB, SYLB
 from algophon.models.D2L import Discrepancy, Rule, Tier
 from algophon.utils import tsp
 
@@ -57,7 +57,6 @@ class D2L:
 
         harmony_rule = self.build_rule(pairs=pairs)
         disharmony_rule = self.build_rule(pairs=pairs, harmony=False)
-        print(f'Harmony: {harmony_rule}')
         if harmony_rule and not disharmony_rule: # if only harmony built a productive rule, use it
             self.rule = harmony_rule
         elif disharmony_rule and not harmony_rule: # if only disharmony built a productive rule, use it
@@ -89,6 +88,21 @@ class D2L:
 
     # calling a D2L object amounts to calling its produce() method
     __call__ = produce
+
+    def accuracy(self, pairs: Iterable) -> float:
+        '''
+        :pairs: an iterable of (UR, SR) pairs to compute the TSP stats for
+            - Computed over unique pairs
+
+        :return: the accuracy of the rule's predictions of the :pairs:
+        '''
+        n, c = 0, 0
+        for ur, sr in set(pairs):
+            pred = self.produce(ur)
+            n += 1
+            if pred == sr:
+                c += 1
+        return c / n
 
     def _load_train(self, path: str, sep: str) -> set:
         '''
@@ -159,7 +173,7 @@ class D2L:
 
         return setup_pairs
     
-    def build_rule(self, pairs: set, delset: set=set(), harmony: bool=True, discrepancy: Union[None, Discrepancy]=None) -> Rule:
+    def build_rule(self, pairs: set, delset: set=set(), tier=None, harmony: bool=True, discrepancy: Union[None, Discrepancy]=None) -> Rule:
         '''
         Builds a rule recursively.
 
@@ -177,20 +191,44 @@ class D2L:
         if not harmony: # TODO implement disharmony
             return
 
-        lctxts, rctxts = self._get_tier_adj_contexts(discrepancy=discrepancy, tier=None) # compute ctxts
+        lctxts, rctxts = self._get_tier_adj_contexts(discrepancy=discrepancy, tier=tier) # compute ctxts
         # build left rule
-        left_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, left_ctxts=lctxts, harmony=harmony)
-        left_default_sr = sorted(left_rule.underextension_SRs(pairs=pairs).items(), reverse=True, key=lambda it: it[-1])[0][0]
-        left_rule.set_defaults(dict((feat, left_default_sr.features[feat]) for feat in discrepancy.feature_diff))
+        left_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, left_ctxts=lctxts, tier=tier, harmony=harmony)
+        left_underextensions = left_rule.underextension_SRs(pairs=pairs)
+        if len(left_underextensions) > 0:
+            left_default_sr = sorted(left_underextensions.items(), reverse=True, key=lambda it: it[-1])[0][0]
+            left_rule.set_defaults(dict((feat, left_default_sr.features[feat]) for feat in discrepancy.feature_diff))
         # build right rule
-        right_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, right_ctxts=rctxts, harmony=harmony)
-        right_default_sr = sorted(right_rule.underextension_SRs(pairs=pairs).items(), reverse=True, key=lambda it: it[-1])[0][0]
-        right_rule.set_defaults(dict((feat, right_default_sr.features[feat]) for feat in discrepancy.feature_diff))
+        right_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, right_ctxts=rctxts, tier=tier, harmony=harmony)
+        right_underextensions = right_rule.underextension_SRs(pairs=pairs)
+        if len(right_underextensions) > 0:
+            right_default_sr = sorted(right_underextensions.items(), reverse=True, key=lambda it: it[-1])[0][0]
+            right_rule.set_defaults(dict((feat, right_default_sr.features[feat]) for feat in discrepancy.feature_diff))
 
         rule = left_rule if left_rule.accuracy(pairs=pairs) >= right_rule.accuracy(pairs=pairs) else right_rule
         n, m = rule.tsp_stats(pairs=pairs)
         if tsp(n=n, m=m):
             return rule
+        
+        # rule not productive
+
+        delset = delset.union(left_rule.errant_ctxts(pairs).union(right_rule.errant_ctxts(pairs)))
+        to_remove = delset.difference(target)
+        opts = list(NatClass(feats={feat}, seginv=self.seginv) for feat in self.seginv.feature_intersection(to_remove))
+        # filter nat classes that do remove target segs
+        opts = list(opt for opt in opts if not any(ur in opt for ur in target))
+        if len(opts) > 0:
+            best = sorted(opts, key=lambda opt: (len(self.seginv.extension(opt)), f'{opt}'))[0]
+            _negate_val = {'+': '-', '-': '+'}
+            complement = NatClass(feats=set(f'{_negate_val[feat[0]]}{feat[1:]}' for feat in best.feats), seginv=self.seginv)
+            tier = Tier(seginv=self.seginv, feats=complement)
+            delset = self.seginv.extension_complement(tier._tierset).difference({LWB, RWB, MORPHB, SYLB})
+        else:
+            complement = self.seginv.segs.difference(to_remove)
+            tier = Tier(seginv=self.seginv, segs=complement)
+            delset = to_remove 
+        
+        return self.build_rule(pairs=pairs, delset=delset, tier=tier, harmony=harmony, discrepancy=discrepancy)
 
     def _get_tier_adj_contexts(self, discrepancy: Discrepancy, tier: Union[None, Tier]) -> tuple[set, set]:
         '''
@@ -207,7 +245,9 @@ class D2L:
             for i, seg in enumerate(projected):
                 if seg in target: # check if the seg is an alternating (target) seg
                     # compute left context
-                    left_ctxts.add(projected[i - 1] if i > 0 else self.seginv[LWB])
+                    if i > 0:
+                        left_ctxts.add(projected[i - 1])
                     # compute right context
-                    right_ctxts.add(projected[i + 1] if i < len(projected) - 1 else self.seginv[RWB])
+                    if i < len(projected) - 1:
+                        right_ctxts.add(projected[i + 1])
         return left_ctxts, right_ctxts

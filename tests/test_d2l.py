@@ -4,7 +4,7 @@ import sys
 sys.path.append('../')
 from algophon import SegInv, SegStr, NatClass
 from algophon.models.D2L import Tier, Rule, D2L
-from algophon.symbols import LWB, RWB, UNDERSPECIFIED
+from algophon.symbols import LWB, RWB, MORPHB, SYLB, UNDERSPECIFIED
 
 class TestD2L(unittest.TestCase):
     def test_tier_init(self):
@@ -472,17 +472,17 @@ class TestD2L(unittest.TestCase):
         pairs = d2l._train_setup(pairs)
         assert(d2l._get_tier_adj_contexts(discrepancy=d2l._discrepancy, 
                                           tier=None) == ({'u', 'i', 'a', 'o', 't'}, 
-                                                         {'i', RWB}))
+                                                         {'i'}))
         assert(d2l._get_tier_adj_contexts(discrepancy=d2l._discrepancy, 
                                           tier=Tier(seginv=d2l.seginv, feats={'+cons'})) == ({'k', 'S', 'ʃ', 'n', 'g', 't'}, 
-                                                                                             {'S', RWB}))
+                                                                                             {'S'}))
         # overwrite weird Panphon values
         d2l.seginv['s'].features['strid'] = '+'
         d2l.seginv['ʃ'].features['strid'] = '+'
         d2l.seginv['S'].features['strid'] = '+'
         assert(d2l._get_tier_adj_contexts(discrepancy=d2l._discrepancy, 
-                                          tier=Tier(seginv=d2l.seginv, feats={'+strid'})) == ({'s', 'ʃ', 'S', LWB}, 
-                                                                                              {'S', RWB}))
+                                          tier=Tier(seginv=d2l.seginv, feats={'+strid'})) == ({'s', 'ʃ', 'S'}, 
+                                                                                              {'S'}))
         
     def test_D2L_paper_example(self):
         pairs = [
@@ -494,7 +494,21 @@ class TestD2L(unittest.TestCase):
             ('u t S', 'u t s')
         ]
         d2l = D2L(verbose=False)
+        # override Panphon's strid feat
+        d2l.seginv.add_segs({'s', 'ʃ', 'k', 'p', 'n', 'g', 't', 'o', 'u', 'i', 'a'})
+        for seg in d2l.seginv.segs:
+            if seg in {'s', 'ʃ'}:
+                d2l.seginv[seg].features['strid'] = '+'
+            elif seg not in {LWB, RWB, MORPHB, SYLB}:
+                d2l.seginv[seg].features['strid'] = '-'
+
+        # train D2L
         d2l.train(pairs)
+
+        assert(d2l.rule is not None)
+        assert(d2l.rule._apply_default(d2l.seginv['S']) == 's')
+        assert(d2l.rule.accuracy(pairs) == 1.0)
+        assert(d2l.accuracy(pairs) == 1.0)
 
 if __name__ == "__main__":
     unittest.main()
