@@ -407,6 +407,15 @@ class TestD2L(unittest.TestCase):
         rule = Rule(seginv=seginv, target={'S'}, features={'ant'}, defaults={'ant': '+'}, left_ctxts=strid, tier=tier)
         assert(rule.errant_ctxts(pairs) == set())
 
+    def test_rule_set_ctxts(self):
+        seginv = SegInv()
+        seginv.add_segs({'a', 'e', 'i', 'o', 'u', 't', 'p'})
+        vowels = NatClass(feats={'+syl'}, seginv=seginv)
+        rule = Rule(seginv=seginv, target={'e', 'i'}, features={'back'}, left_ctxts={'a', 'e', 'i', 'o', 'u', 't', 'p'})
+        assert(rule.left_ctxts == {'a', 'e', 'i', 'o', 'u', 't', 'p'})
+        rule.set_ctxts(ctxts=vowels)
+        assert(rule.left_ctxts == vowels)
+
     def test_D2L_init(self):
         d2l = D2L(verbose=False)
         assert(d2l is not None)
@@ -506,9 +515,88 @@ class TestD2L(unittest.TestCase):
         d2l.train(pairs)
 
         assert(d2l.rule is not None)
+        assert(d2l.rule.tier is not None)
+        assert(d2l.rule.tier.as_delset is False)
         assert(d2l.rule._apply_default(d2l.seginv['S']) == 's')
         assert(d2l.rule.accuracy(pairs) == 1.0)
         assert(d2l.accuracy(pairs) == 1.0)
+
+    def test_D2L_turkish_toy(self):
+        pairs = [
+            ('d ɑ l l A r', 'd ɑ l l ɑ r'),
+            ('j e r l A r', 'j e r l e r'),
+            ('i p l A r', 'i p l e r'),
+            ('j ɑ z A b i l', 'j ɑ z ɑ b i l'),
+            ('j y z A b i l', 'j y z e b i l'),
+            ('b y r o d A', 'b y r o d ɑ'),
+            ('e v d A', 'e v d e'),
+            ('ø n d͡ʒ e l A r', 'ø n d͡ʒ e l e r'),
+            ('j ɑ r ɯ n l A r', 'j ɑ r ɯ n l ɑ r'),
+            ('k u ʃ l A r', 'k u ʃ l ɑ r'),
+            ('k i ʃ l A r', 'k i ʃ l e r'),
+            ('ɑ r ɑ b ɑ l A r', 'ɑ r ɑ b ɑ l ɑ r'),
+            ('k e d i l A r', 'k e d i l e r'),
+            ('n e r e d A', 'n e r e d e'),
+            ('b u r ɑ d A', 'b u r ɑ d ɑ'),
+            ('d e n i z d A', 'd e n i z d e'),
+            ('t͡ʃ o d͡ʒ u k l A r', 't͡ʃ o d͡ʒ u k l ɑ r'),
+            ('ɑ b i l A r', 'ɑ b i l e r'),
+            ('k u z u l A r', 'k u z u l ɑ r'),
+            ('n e l A r', 'n e l e r'),
+            ('k ø p e k l A r', 'k ø p e k l e r'),
+            ('k ø p i k l A r', 'k ø p i k l e r'),
+            ('i k l A r', 'i k l e r'),
+            ('e k l A r', 'e k l e r'),
+            ('i k t A', 'i k t e'),
+            ('e k t A', 'e k t e'),
+            ('y k t A', 'y k t e'),
+            ('b i r ʃ e j l A r', 'b i r ʃ e j l e r'),
+            ('s ɑ n A', 's ɑ n ɑ'),
+            ('j ɑ p m A', 'j ɑ p m ɑ'),
+            ('s e n d A', 's e n d e'),
+            ('b ɑ l ɯ k l A r', 'b ɑ l ɯ k l ɑ r'),
+            ('k e k A', 'k e k e'),
+
+        ]
+
+        d2l = D2L(verbose=False)
+
+        # setup vowel inventory
+        vowels = {
+            'e': ['-back', '-round', '-hi'],
+            'ø': ['-back', '+round', '-hi'],
+            'ɑ': ['+back', '-round', '-hi'],
+            'o': ['+back', '+round', '-hi'],
+
+            # high vowels
+            'i': ['-back', '-round', '+hi'],
+            'y': ['-back', '+round', '+hi'],
+            'ɯ': ['+back', '-round', '+hi'],
+            'u': ['+back', '+round', '+hi']
+
+        }
+        d2l.seginv.add_segs(set(vowels.keys()))
+
+        for feat in ['delrel', 'lat', 'nas', 'strid', 'sg', 'cg', 'ant', 'cor', 'distr', 'lab', 'hi', 'lo', 'back', 'round', 'velaric', 'tense', 'long', 'hitone', 'hireg']:
+            for vowel in vowels.keys():
+                d2l.seginv[vowel].features[feat] = UNDERSPECIFIED
+        for vowel, feats in vowels.items():
+            for feat in feats:
+                d2l.seginv[vowel].features[feat[1:]] = feat[0]
+        
+        assert(d2l.seginv.feature_diff('ɑ', 'e') == {'back'})
+        assert(d2l.seginv.feature_diff('ɑ', 'y') == {'back', 'round', 'hi'})
+        assert(d2l.seginv.feature_diff('ɑ', 'i') == {'back', 'hi'})
+        
+        # train D2L
+        d2l.train(pairs)
+
+        assert(d2l.rule is not None)
+        assert(d2l.rule.tier is not None)
+        assert(d2l.rule.tier.as_delset is False)
+        assert(d2l.rule.accuracy(pairs) == 1.0)
+        assert(d2l.accuracy(pairs) == 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()

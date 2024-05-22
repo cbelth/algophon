@@ -208,25 +208,36 @@ class D2L:
         rule = left_rule if left_rule.accuracy(pairs=pairs) >= right_rule.accuracy(pairs=pairs) else right_rule
         n, m = rule.tsp_stats(pairs=pairs)
         if tsp(n=n, m=m):
+            ctxt = set(rule.left_ctxts if rule.left_ctxts is not None else rule.right_ctxts)
+            acc_before = rule.accuracy(pairs)
+            rule.set_ctxts(ctxts=rule.tier._tierset)
+            acc_after = rule.accuracy(pairs)
+            if acc_after < acc_before: # change it back
+                rule.set_ctxt(ctxt)
             return rule
         
         # rule not productive
 
-        delset = delset.union(left_rule.errant_ctxts(pairs).union(right_rule.errant_ctxts(pairs)))
-        to_remove = delset.difference(target)
-        opts = list(NatClass(feats={feat}, seginv=self.seginv) for feat in self.seginv.feature_intersection(to_remove))
+        _old_delset = set(delset)
+        delset = delset.union(left_rule.errant_ctxts(pairs).union(right_rule.errant_ctxts(pairs))).difference(target)
+        opts = list(NatClass(feats={feat}, seginv=self.seginv) for feat in self.seginv.feature_intersection(delset))
         # filter nat classes that do remove target segs
         opts = list(opt for opt in opts if not any(ur in opt for ur in target))
         if len(opts) > 0:
             best = sorted(opts, key=lambda opt: (len(self.seginv.extension(opt)), f'{opt}'))[0]
             _negate_val = {'+': '-', '-': '+'}
             complement = NatClass(feats=set(f'{_negate_val[feat[0]]}{feat[1:]}' for feat in best.feats), seginv=self.seginv)
-            tier = Tier(seginv=self.seginv, feats=complement)
-            delset = self.seginv.extension_complement(tier._tierset).difference({LWB, RWB, MORPHB, SYLB})
+            # if the neg of the delset nat class is the the extension complement (e.g., [+syl] vs. [-syl]), use it
+            if best.extension_complement().difference({LWB, RWB, SYLB, MORPHB}) == complement.extension():
+                tier = Tier(seginv=self.seginv, feats=complement)
+            else: # otherwise, use the delset nat class
+                tier = Tier(seginv=self.seginv, feats=best, as_delset=True)
         else:
-            complement = self.seginv.segs.difference(to_remove)
+            complement = self.seginv.segs.difference(delset)
             tier = Tier(seginv=self.seginv, segs=complement)
-            delset = to_remove 
+
+        if _old_delset == delset: # prevent infinite recursion
+            return None
         
         return self.build_rule(pairs=pairs, delset=delset, tier=tier, harmony=harmony, discrepancy=discrepancy)
 

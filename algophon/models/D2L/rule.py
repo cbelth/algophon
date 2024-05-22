@@ -89,7 +89,7 @@ class Rule:
         :return: the accuracy of the rule's predictions of the :pairs:
         '''
         n, m = self.tsp_stats(pairs=pairs)
-        return m / n
+        return m / n if n > 0 else 0.0
 
     def tsp_stats(self, pairs: Iterable) -> tuple[int, int]:
         '''
@@ -194,6 +194,16 @@ class Rule:
         if defaults is not None and not all(feat in defaults for feat in self.features):
             raise ValueError(':defaults: must include one value per :self.features:')
         self.defaults = defaults
+
+    def set_ctxts(self, ctxts: Union[None, set, NatClass]) -> None:
+        '''
+        :ctxts: a set of segments that trigger rule application
+            - Can be a set of specific segments or a NatClass object
+        '''
+        if self.left_ctxts is not None:
+            self.left_ctxts = ctxts
+        else:
+            self.right_ctxts = ctxts
 
     def errant_ctxts(self, pairs: Iterable) -> set:
         '''

@@ -1,9 +1,10 @@
 from typing import Union
 
 from algophon import Seg, SegStr, NatClass, SegInv
+from algophon.symbols import NEG
 
 class Tier:
-    def __init__(self, seginv: SegInv, feats: Union[NatClass, set, None]=None, segs: Union[set, None]=None) -> object:
+    def __init__(self, seginv: SegInv, feats: Union[NatClass, set, None]=None, segs: Union[set, None]=None, as_delset: bool=False) -> object:
         '''
         :feats: (Optional) a feature-specification of the tier. One of the following
             - NatClass object
@@ -12,6 +13,7 @@ class Tier:
         :seginv: a SegInv object
         :segs: (Optional) a set of particular segments. Will automatically be converted to Seg objects if currently str objects.
             - None; :feats: must be passed instead to define the Tier
+        :as_delset: (Optional; default False) if True, :feats: is interpreted as a deletion set rather (i.e., containment is attained by *not* being in self._tierset)
 
         Exactly one of :feats: and :segs: must be provided (no more no less) to define the Tier.
         '''
@@ -21,6 +23,7 @@ class Tier:
             raise ValueError(f'Either :feats: or :segs: must be passed to define the tier, but neither was passed.')
         
         self.seginv = seginv # init self.seginv
+        self.as_delset = as_delset
 
         if segs is not None: # a set of Segs
             self._tierset = set(self.seginv.add_and_get(seg) for seg in segs)
@@ -31,6 +34,8 @@ class Tier:
 
         # init self._str
         self._str = self._tierset.__str__() if not isinstance(self._tierset, set) else '{' + f'{",".join(sorted(list(f"{seg}" for seg in self._tierset)))}' + '}'
+        if self.as_delset:
+            self._str = f'{NEG}{self._str}'
 
     def __str__(self) -> str:
         return self._str
@@ -39,6 +44,8 @@ class Tier:
         return self.__str__()
     
     def __contains__(self, key: Union[str, Seg]) -> bool:
+        if self.as_delset:
+            return key not in self._tierset
         return key in self._tierset
     
     def project(self, segstr: SegStr) -> SegStr:
