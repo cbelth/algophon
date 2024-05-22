@@ -597,6 +597,29 @@ class TestD2L(unittest.TestCase):
         assert(d2l.rule.accuracy(pairs) == 1.0)
         assert(d2l.accuracy(pairs) == 1.0)
 
+    def test_D2L_mcmullin_hansson(self):
+        d2l = D2L(verbose=False)
+        d2l.train_on_file(path='data/mcmullin_hansson/exp-1a-train.txt')
+        assert(d2l.rule.harmony) # agree
+        assert(d2l.rule.tier._str == '[-syl]')
+        assert(d2l.rule.right_ctxts._name == '[-syl]')
+
+        d2l.train_on_file(path='data/mcmullin_hansson/exp-1b-train.txt')
+        assert(d2l.rule.harmony) # agree
+        assert(d2l.rule.tier._str == '¬[-lat]')
+        assert(d2l.rule._apply_default(d2l.seginv['L']) == 'ɹ')
+        assert(d2l.rule.right_ctxts == {'l'})
+
+        d2l.train_on_file(path='data/mcmullin_hansson/exp-2a-train.txt')
+        assert(not d2l.rule.harmony) # disagree
+        assert(d2l.rule.tier._str == '[-syl]')
+        assert(d2l.rule.right_ctxts._name == '[-syl]')
+
+        d2l.train_on_file(path='data/mcmullin_hansson/exp-2b-train.txt')
+        assert(not d2l.rule.harmony) # disagree
+        assert(d2l.rule.tier._str == '¬[-lat]')
+        assert(d2l.rule._apply_default(d2l.seginv['L']) == 'l')
+        assert(d2l.rule.right_ctxts == {'l'})
 
 if __name__ == "__main__":
     unittest.main()

@@ -3,7 +3,7 @@ from typing import Iterable, Union
 from collections import defaultdict
 
 from algophon import Seg, SegInv, NatClass, SegStr
-from algophon.symbols import FUNCTION_COMPOSITION, LWB, RWB, UNK
+from algophon.symbols import FUNCTION_COMPOSITION, LWB, RWB, UNK, UNDERSPECIFIED
 from algophon.models.D2L import Tier
 
 class Rule:
@@ -146,7 +146,7 @@ class Rule:
         if self.harmony:
             features = dict((feat, val if feat not in self.features else ctxt.features[feat]) for feat, val in seg.features.items())
         else:
-            rev_val = {'+': '-', '-': '+'}
+            rev_val = {'+': '-', '-': '+', UNDERSPECIFIED: UNDERSPECIFIED}
             features = dict((feat, val if feat not in self.features else rev_val[ctxt.features[feat]]) for feat, val in seg.features.items())
         return self._lookup_by_features(features=features, seg=seg)
     

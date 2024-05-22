@@ -62,7 +62,7 @@ class D2L:
         elif disharmony_rule and not harmony_rule: # if only disharmony built a productive rule, use it
             self.rule = disharmony_rule
         elif harmony_rule and disharmony_rule: # if both harmony and disharmony yield a rule, choose the more accurate
-            assim_acc, dissim_acc = harmony_rule.accuracy(self.pairs), disharmony_rule.accuracy(self.pairs)
+            assim_acc, dissim_acc = harmony_rule.accuracy(pairs), disharmony_rule.accuracy(pairs)
             self.rule = harmony_rule if assim_acc >= dissim_acc else disharmony_rule
         else: # neither harmony nor disharmony built a productive rule
             self.rule = None
@@ -114,7 +114,7 @@ class D2L:
         pairs = set()
         with open(path, 'r') as f:
             for line in f:
-                ur, sr = line.strip().spit(sep)
+                ur, sr = line.strip().split(sep)
                 pairs.add((ur, sr))
         return pairs
 
@@ -188,9 +188,6 @@ class D2L:
             discrepancy = self._discrepancy
         target = discrepancy.get_alternating_UR_segs() # compute target segs
 
-        if not harmony: # TODO implement disharmony
-            return
-
         lctxts, rctxts = self._get_tier_adj_contexts(discrepancy=discrepancy, tier=tier) # compute ctxts
         # build left rule
         left_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, left_ctxts=lctxts, tier=tier, harmony=harmony)
@@ -213,7 +210,7 @@ class D2L:
             rule.set_ctxts(ctxts=rule.tier._tierset)
             acc_after = rule.accuracy(pairs)
             if acc_after < acc_before: # change it back
-                rule.set_ctxt(ctxt)
+                rule.set_ctxts(ctxt)
             return rule
         
         # rule not productive
