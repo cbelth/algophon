@@ -597,6 +597,31 @@ class TestD2L(unittest.TestCase):
         assert(d2l.rule.accuracy(pairs) == 1.0)
         assert(d2l.accuracy(pairs) == 1.0)
 
+    def test_D2L_finley(self):
+        d2l = D2L(verbose=False)
+
+        pairs = d2l.load_train(path='data/finley/exp-1-train.txt')
+        d2l.train(pairs=pairs)
+        assert(d2l.rule.harmony) # agree
+        assert(d2l.rule.tier._str == '[-syl]')
+        assert(d2l.rule.left_ctxts._name == '[-syl]')
+        assert(d2l.accuracy(pairs) == 1.0)
+
+        pairs = d2l.load_train(path='data/finley/exp-2-train.txt')
+        d2l._train_setup(pairs=pairs)
+        # overwrite weird Panphon values
+        for seg in d2l.seginv.segs:
+            if seg in {'s', 'ʃ', 'S'}:
+                d2l.seginv[seg].features['strid'] = '+'
+                d2l.seginv[seg].features['distr'] = '+'
+            else:
+                d2l.seginv[seg].features['strid'] = '-'
+        d2l.train(pairs=pairs)
+        assert(d2l.rule.harmony) # agree
+        assert(d2l.accuracy(pairs) == 1.0)
+        assert(d2l.rule.tier._str == '[+strid]')
+        assert(d2l.rule.left_ctxts._name == '[+strid]')
+
     def test_D2L_mcmullin_hansson(self):
         d2l = D2L(verbose=False)
         d2l.train_on_file(path='data/mcmullin_hansson/exp-1a-train.txt')

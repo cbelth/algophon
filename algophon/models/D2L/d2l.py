@@ -38,8 +38,24 @@ class D2L:
 
         :return: the D2L model object
         '''
-        pairs = self._load_train(path, sep=sep)
+        pairs = self.load_train(path, sep=sep)
         return self.train(pairs)
+    
+    def load_train(self, path: str, sep: str='\t') -> set:
+        '''
+        Loads (UR, SR) pairs from a file.
+
+        :path: the location of the training file
+        :sep: (Optional; default '\t') the character used to separate URs from SRs in the file
+
+        :return: the D2L model object
+        '''
+        pairs = set()
+        with open(path, 'r') as f:
+            for line in f:
+                ur, sr = line.strip().split(sep)
+                pairs.add((ur, sr))
+        return pairs
 
     def train(self, pairs: Iterable) -> object:
         '''
@@ -103,20 +119,6 @@ class D2L:
             if pred == sr:
                 c += 1
         return c / n
-
-    def _load_train(self, path: str, sep: str) -> set:
-        '''
-        :path: the same as in self.train_on_file
-        :sep: the same as in self.train_on_file
-
-        :return: a set of UR, SR pairs loaded from the file at :path:
-        '''
-        pairs = set()
-        with open(path, 'r') as f:
-            for line in f:
-                ur, sr = line.strip().split(sep)
-                pairs.add((ur, sr))
-        return pairs
 
     def _train_setup(self, pairs: Iterable) -> set:
         '''
