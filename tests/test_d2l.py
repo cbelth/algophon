@@ -242,9 +242,9 @@ class TestD2L(unittest.TestCase):
         pairs = d2l._train_setup(pairs)
         seginv = d2l.seginv
         # overwrite weird Panphon values
-        seginv['s'].features['strid'] = '+'
-        seginv['ʃ'].features['strid'] = '+'
-        seginv['S'].features['strid'] = '+'
+        seginv['s']['strid'] = '+'
+        seginv['ʃ']['strid'] = '+'
+        seginv['S']['strid'] = '+'
 
         strid = NatClass(feats={'+strid'}, seginv=seginv)
         tier = Tier(seginv=seginv, feats=strid)
@@ -318,9 +318,9 @@ class TestD2L(unittest.TestCase):
         pairs = d2l._train_setup(pairs)
         seginv = d2l.seginv
         # overwrite weird Panphon values
-        seginv['s'].features['strid'] = '+'
-        seginv['ʃ'].features['strid'] = '+'
-        seginv['S'].features['strid'] = '+'
+        seginv['s']['strid'] = '+'
+        seginv['ʃ']['strid'] = '+'
+        seginv['S']['strid'] = '+'
 
         rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=seginv.segs)
         assert(rule.tsp_stats(pairs) == (8, 1))
@@ -348,9 +348,9 @@ class TestD2L(unittest.TestCase):
         pairs = d2l._train_setup(pairs)
         seginv = d2l.seginv
         # overwrite weird Panphon values
-        seginv['s'].features['strid'] = '+'
-        seginv['ʃ'].features['strid'] = '+'
-        seginv['S'].features['strid'] = '+'
+        seginv['s']['strid'] = '+'
+        seginv['ʃ']['strid'] = '+'
+        seginv['S']['strid'] = '+'
 
         strid = NatClass(feats={'+strid'}, seginv=seginv)
         tier = Tier(seginv=seginv, feats=strid)
@@ -387,12 +387,12 @@ class TestD2L(unittest.TestCase):
         pairs = d2l._train_setup(pairs)
         seginv = d2l.seginv
         # overwrite weird Panphon values
-        seginv['s'].features['strid'] = '+'
-        seginv['ʃ'].features['strid'] = '+'
-        seginv['S'].features['strid'] = '+'
-        seginv['s'].features['distr'] = '+'
-        seginv['ʃ'].features['distr'] = '+'
-        seginv['S'].features['distr'] = '+'
+        seginv['s']['strid'] = '+'
+        seginv['ʃ']['strid'] = '+'
+        seginv['S']['strid'] = '+'
+        seginv['s']['distr'] = '+'
+        seginv['ʃ']['distr'] = '+'
+        seginv['S']['distr'] = '+'
 
         rule = Rule(seginv=seginv, target={'S'}, features={'ant'}, left_ctxts=seginv.segs)
         assert(rule.errant_ctxts(pairs) == {'u', 'i', 'a', 'o'})
@@ -486,9 +486,9 @@ class TestD2L(unittest.TestCase):
                                           tier=Tier(seginv=d2l.seginv, feats={'+cons'})) == ({'k', 'S', 'ʃ', 'n', 'g', 't'}, 
                                                                                              {'S'}))
         # overwrite weird Panphon values
-        d2l.seginv['s'].features['strid'] = '+'
-        d2l.seginv['ʃ'].features['strid'] = '+'
-        d2l.seginv['S'].features['strid'] = '+'
+        d2l.seginv['s']['strid'] = '+'
+        d2l.seginv['ʃ']['strid'] = '+'
+        d2l.seginv['S']['strid'] = '+'
         assert(d2l._get_tier_adj_contexts(discrepancy=d2l._discrepancy, 
                                           tier=Tier(seginv=d2l.seginv, feats={'+strid'})) == ({'s', 'ʃ', 'S'}, 
                                                                                               {'S'}))
@@ -507,9 +507,9 @@ class TestD2L(unittest.TestCase):
         d2l.seginv.add_segs({'s', 'ʃ', 'k', 'p', 'n', 'g', 't', 'o', 'u', 'i', 'a'})
         for seg in d2l.seginv.segs:
             if seg in {'s', 'ʃ'}:
-                d2l.seginv[seg].features['strid'] = '+'
+                d2l.seginv[seg]['strid'] = '+'
             elif seg not in {LWB, RWB, MORPHB, SYLB}:
-                d2l.seginv[seg].features['strid'] = '-'
+                d2l.seginv[seg]['strid'] = '-'
 
         # train D2L
         d2l.train(pairs)
@@ -579,10 +579,10 @@ class TestD2L(unittest.TestCase):
 
         for feat in ['delrel', 'lat', 'nas', 'strid', 'sg', 'cg', 'ant', 'cor', 'distr', 'lab', 'hi', 'lo', 'back', 'round', 'velaric', 'tense', 'long', 'hitone', 'hireg']:
             for vowel in vowels.keys():
-                d2l.seginv[vowel].features[feat] = UNDERSPECIFIED
+                d2l.seginv[vowel][feat] = UNDERSPECIFIED
         for vowel, feats in vowels.items():
             for feat in feats:
-                d2l.seginv[vowel].features[feat[1:]] = feat[0]
+                d2l.seginv[vowel][feat[1:]] = feat[0]
         
         assert(d2l.seginv.feature_diff('ɑ', 'e') == {'back'})
         assert(d2l.seginv.feature_diff('ɑ', 'y') == {'back', 'round', 'hi'})
@@ -612,10 +612,10 @@ class TestD2L(unittest.TestCase):
         # overwrite weird Panphon values
         for seg in d2l.seginv.segs:
             if seg in {'s', 'ʃ', 'S'}:
-                d2l.seginv[seg].features['strid'] = '+'
-                d2l.seginv[seg].features['distr'] = '+'
+                d2l.seginv[seg]['strid'] = '+'
+                d2l.seginv[seg]['distr'] = '+'
             else:
-                d2l.seginv[seg].features['strid'] = '-'
+                d2l.seginv[seg]['strid'] = '-'
         d2l.train(pairs=pairs)
         assert(d2l.rule.harmony) # agree
         assert(d2l.accuracy(pairs) == 1.0)
