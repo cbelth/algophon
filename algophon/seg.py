@@ -40,3 +40,11 @@ class Seg:
         Length of a segment is always 1
         '''
         return 1
+    
+    def __getitem__(self, feature: str) -> str:
+        '''
+        :feature: a feature, whose value to return
+
+        :return: the value ('+', '-', '0') of the :feature:
+        '''
+        return self.features.__getitem__(feature)

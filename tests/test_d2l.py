@@ -362,10 +362,10 @@ class TestD2L(unittest.TestCase):
         seginv.add_segs({'s', 'ʃ'})
         rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts={'s', 'ʃ'})
         assert(rule.defaults is None)
-        rule.set_defaults(defaults={'ant': seginv['s'].features['ant'], 'distr': seginv['s'].features['distr']})
+        rule.set_defaults(defaults={'ant': seginv['s']['ant'], 'distr': seginv['s']['distr']})
         assert(len(rule.defaults) == 2)
-        assert(rule.defaults['ant'] == seginv['s'].features['ant'])
-        assert(rule.defaults['distr'] == seginv['s'].features['distr'])
+        assert(rule.defaults['ant'] == seginv['s']['ant'])
+        assert(rule.defaults['distr'] == seginv['s']['distr'])
         
         try:
             rule.set_defaults(defaults={'ant': '+'})

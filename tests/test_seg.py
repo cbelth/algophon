@@ -38,5 +38,12 @@ class TestSeg(unittest.TestCase):
         assert(len(tsh) == 1)
         assert(len(long_i) == 1)
 
+    def test_getitem(self):
+        seg = Seg(ipa='i', features={'syl': '+', 'voi': '+', 'stri': '0'})
+        assert(seg.features['syl'] == '+')
+        assert(seg.features['stri'] == '0')
+        assert(seg['syl'] == '+')
+        assert(seg['stri'] == '0')
+
 if __name__ == "__main__":
     unittest.main()
