@@ -521,6 +521,48 @@ class TestD2L(unittest.TestCase):
         assert(d2l.rule.accuracy(pairs) == 1.0)
         assert(d2l.accuracy(pairs) == 1.0)
 
+    def test_D2L_readme_example(self):
+        pairs = [
+            ('m o k u D', 'm o k u n'), 
+            ('a p a D', 'a p a d'),
+            ('t u n i D', 't u n i n'),
+            ('s o k i D', 's o k i d'),
+            ('n i g o D', 'n i g o n'),
+            ('u t e D', 'u t e d'),
+            ('u m i D', 'u m i n'),
+            ('e t e D', 'e t e d'),
+            ('u n i b e D', 'u n i b e n'),
+            ('k a d u D', 'k a d u d'),
+            ('m i t u D', 'm i t u n'),
+            ('u n i t a D', 'u n i t a n')
+        ]
+        d2l = D2L()
+        d2l.train(pairs)
+
+        assert(d2l.rule is not None)
+        assert(d2l.rule.left_ctxts == {'n', 'm'})
+        assert(f'{d2l.rule.tier}' == '¬[-nas]')
+        assert(d2l.rule.defaults is not None)
+        assert(d2l.rule.accuracy(pairs) == 1.0)
+        assert(d2l.accuracy(pairs) == 1.0)
+
+    def test_D2L_readme_adj_example(self):
+        pairs = [
+            ('m o k u D', 'm o k u d'), 
+            ('a p a D', 'a p a d'),
+            ('t u n i D', 't u n i t'),
+            ('s o k i D', 's o k i t'),
+            ('a k D', 'a k t'),
+            ('u m i D', 'u m i d'),
+        ]
+        d2l = D2L()
+        d2l.train(pairs)
+
+        assert(d2l.rule.tsp_stats(pairs) == (6, 4))
+        assert(d2l.rule.left_ctxts == {'u', 'a', 'i', 'k'})
+        assert(d2l.rule.tier is None)
+        assert(d2l.rule.defaults is None)
+
     def test_D2L_turkish_toy(self):
         pairs = [
             ('d ɑ l l A r', 'd ɑ l l ɑ r'),

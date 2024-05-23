@@ -36,6 +36,15 @@ class D2L:
         self._discrepancy = None # the discrepancy to account for
         self.rule = None
 
+    def __str__(self) -> str:
+        if self.rule is None:
+            return 'D2L model with no learned rule'
+        else:
+            return f'D2L model with rule {self.rule}'
+    
+    def __repr__(self) -> str:
+        return self.__str__()
+
     def train_on_file(self, path: str, sep: str='\t') -> object:
         '''
         The same as self.train, but loads (UR, SR) pairs from a file instead of having them passed as an argument.
@@ -215,11 +224,12 @@ class D2L:
         n, m = rule.tsp_stats(pairs=pairs)
         if tsp(n=n, m=m):
             ctxt = set(rule.left_ctxts if rule.left_ctxts is not None else rule.right_ctxts)
-            acc_before = rule.accuracy(pairs)
-            rule.set_ctxts(ctxts=rule.tier._tierset)
-            acc_after = rule.accuracy(pairs)
-            if acc_after < acc_before: # change it back
-                rule.set_ctxts(ctxt)
+            if rule.tier is not None: # set the ctxt to the tier if doing so does not change accuracy
+                acc_before = rule.accuracy(pairs)
+                rule.set_ctxts(ctxts=rule.tier._tierset)
+                acc_after = rule.accuracy(pairs)
+                if acc_after < acc_before: # change it back
+                    rule.set_ctxts(ctxt)
             return rule
         
         # rule not productive

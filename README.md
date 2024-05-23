@@ -273,6 +273,33 @@ iː
 
 ## Learning Models
 
+### D2L
+
+An implementation of the model "Distant to Local" from the following paper:
+
+```
+@article{belth2024tiers,
+    title={A Learning-Based Account of Phonological Tiers},
+    author={Belth, Caleb},
+    journal={Linguistic Inquiry},
+    year={2024},
+    publisher={MIT Press},
+    url = {https://doi.org/10.1162/ling\_a\_00530},
+}
+```
+
+Please see the models [README](https://github.com/cbelth/algophon/blob/d2l/algophon/models/README.md) for details.
+
+### PLP
+
+<span style="color:orange">Work in Progress</span>
+
+### Miaseg
+
+<span style="color:orange">Work in Progress</span>
+
+### Other Models
+
 <span style="color:orange">Work in Progress</span>
 
 ## Citation
