@@ -238,7 +238,7 @@ class TestD2L(unittest.TestCase):
             ('s i g o S i S', 's i g o s i s'),
             ('u t S', 'u t s')
         ]
-        d2l = D2L(verbose=False)
+        d2l = D2L()
         pairs = d2l._train_setup(pairs)
         seginv = d2l.seginv
         # overwrite weird Panphon values
@@ -314,7 +314,7 @@ class TestD2L(unittest.TestCase):
             ('s i g o S i S', 's i g o s i s'),
             ('u t S', 'u t s')
         ]
-        d2l = D2L(verbose=False)
+        d2l = D2L()
         pairs = d2l._train_setup(pairs)
         seginv = d2l.seginv
         # overwrite weird Panphon values
@@ -344,7 +344,7 @@ class TestD2L(unittest.TestCase):
             ('i g o i S', 'i g o i ʃ'),
             ('u t S', 'u t s')
         ]
-        d2l = D2L(verbose=False)
+        d2l = D2L()
         pairs = d2l._train_setup(pairs)
         seginv = d2l.seginv
         # overwrite weird Panphon values
@@ -383,7 +383,7 @@ class TestD2L(unittest.TestCase):
             ('s i g o S i S', 's i g o s i s'),
             ('u t S', 'u t s')
         ]
-        d2l = D2L(verbose=False)
+        d2l = D2L()
         pairs = d2l._train_setup(pairs)
         seginv = d2l.seginv
         # overwrite weird Panphon values
@@ -417,7 +417,7 @@ class TestD2L(unittest.TestCase):
         assert(rule.left_ctxts == vowels)
 
     def test_D2L_init(self):
-        d2l = D2L(verbose=False)
+        d2l = D2L()
         assert(d2l is not None)
         assert(d2l.seginv is not None)
 
@@ -430,7 +430,7 @@ class TestD2L(unittest.TestCase):
             ('s i g o S i S', 's i g o s i s'),
             ('u t S', 'u t s')
         ]
-        d2l = D2L(verbose=False)
+        d2l = D2L()
         setup_pairs = d2l._train_setup(pairs)
         assert('S' in d2l.seginv) # make sure abstract URs are created
         assert(len(setup_pairs) == len(pairs))
@@ -454,7 +454,7 @@ class TestD2L(unittest.TestCase):
             ('u t S', 'u t s'),
             ('u t S', 'u t s'), # duplicate
         ]
-        d2l = D2L(verbose=False)
+        d2l = D2L()
         setup_pairs = d2l._train_setup(pairs)
         assert('S' in d2l.seginv)
         assert(len(setup_pairs) == len(pairs) - 3)
@@ -477,7 +477,7 @@ class TestD2L(unittest.TestCase):
             ('u t S', 'u t s'),
             ('u t S', 'u t s'), # duplicate
         ]
-        d2l = D2L(verbose=False)
+        d2l = D2L()
         pairs = d2l._train_setup(pairs)
         assert(d2l._get_tier_adj_contexts(discrepancy=d2l._discrepancy, 
                                           tier=None) == ({'u', 'i', 'a', 'o', 't'}, 
@@ -502,7 +502,7 @@ class TestD2L(unittest.TestCase):
             ('s i g o S i S', 's i g o s i s'),
             ('u t S', 'u t s')
         ]
-        d2l = D2L(verbose=False)
+        d2l = D2L()
         # override Panphon's strid feat
         d2l.seginv.add_segs({'s', 'ʃ', 'k', 'p', 'n', 'g', 't', 'o', 'u', 'i', 'a'})
         for seg in d2l.seginv.segs:
@@ -559,7 +559,7 @@ class TestD2L(unittest.TestCase):
 
         ]
 
-        d2l = D2L(verbose=False)
+        d2l = D2L()
 
         # setup vowel inventory
         vowels = {
@@ -598,7 +598,7 @@ class TestD2L(unittest.TestCase):
         assert(d2l.accuracy(pairs) == 1.0)
 
     def test_D2L_finley(self):
-        d2l = D2L(verbose=False)
+        d2l = D2L()
 
         pairs = d2l.load_train(path='data/finley/exp-1-train.txt')
         d2l.train(pairs=pairs)
@@ -623,7 +623,7 @@ class TestD2L(unittest.TestCase):
         assert(d2l.rule.left_ctxts._name == '[+strid]')
 
     def test_D2L_mcmullin_hansson(self):
-        d2l = D2L(verbose=False)
+        d2l = D2L()
         d2l.train_on_file(path='data/mcmullin_hansson/exp-1a-train.txt')
         assert(d2l.rule.harmony) # agree
         assert(d2l.rule.tier._str == '[-syl]')
