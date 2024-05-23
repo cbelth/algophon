@@ -3,7 +3,7 @@ from typing import Union, Iterable
 from collections import defaultdict
 
 from algophon import SegInv, SegStr, NatClass
-from algophon.symbols import UNDERSPECIFIED, LWB, RWB, MORPHB, SYLB
+from algophon.symbols import UNDERSPECIFIED, BOUNDARIES
 from algophon.models.D2L import Discrepancy, Rule, Tier
 from algophon.utils import tsp
 
@@ -22,9 +22,16 @@ class D2L:
     }
     '''
 
-    def __init__(self, verbose: bool=True) -> object:
-        self.seginv = SegInv(add_boundary_symbols=True)
-        self.verbose = verbose
+    def __init__(self, 
+                 ipa_file_path: Union[None, str]=None, 
+                 sep: str='\t') -> object:
+        '''
+        :ipa_file_path: (Optional; default None) if a str path is passed, the features are used from there
+            - Default of None uses Panphon (https://github.com/dmort27/panphon) features
+        :sep: (Optional; default '\t') the char separating columns in :ipa_file_path:
+            - Only used if :ipa_file_path: is also passed
+        '''
+        self.seginv = SegInv(add_boundary_symbols=True, ipa_file_path=ipa_file_path, sep=sep)
 
         self._discrepancy = None # the discrepancy to account for
         self.rule = None
@@ -227,7 +234,7 @@ class D2L:
             _negate_val = {'+': '-', '-': '+'}
             complement = NatClass(feats=set(f'{_negate_val[feat[0]]}{feat[1:]}' for feat in best.feats), seginv=self.seginv)
             # if the neg of the delset nat class is the the extension complement (e.g., [+syl] vs. [-syl]), use it
-            if best.extension_complement().difference({LWB, RWB, SYLB, MORPHB}) == complement.extension():
+            if best.extension_complement().difference(BOUNDARIES) == complement.extension():
                 tier = Tier(seginv=self.seginv, feats=complement)
             else: # otherwise, use the delset nat class
                 tier = Tier(seginv=self.seginv, feats=best, as_delset=True)

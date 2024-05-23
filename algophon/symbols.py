@@ -2,6 +2,7 @@ LWB = '⋊'
 RWB = '⋉'
 SYLB = '.'
 MORPHB = '-'
+BOUNDARIES = [LWB, RWB, SYLB, MORPHB]
 PRIMARY_STRESS = 'ˈ'
 SEC_STRESS = 'ˌ'
 LONG = 'ː'
