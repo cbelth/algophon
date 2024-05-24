@@ -251,14 +251,18 @@ The `symbols` module (technically just a file...) contains a number of constant 
 ```python
 LWB = '⋊'
 RWB = '⋉'
-SYL_BOUNDARY = '.'
+SYLB = '.'
+MORPHB = '-'
+BOUNDARIES = [LWB, RWB, SYLB, MORPHB]
 PRIMARY_STRESS = 'ˈ'
 SEC_STRESS = 'ˌ'
 LONG = 'ː'
-NASALIZED = '\u0303' # ◌̃
+NASALIZED = '\u0303'  # ◌̃
 UNDERSPECIFIED = '0'
 UNK = '?'
 NEG = '¬'
+EMPTY = '_'
+FUNCTION_COMPOSITION = '∘'
 ```
 
 These can be accessed like this:
