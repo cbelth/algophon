@@ -163,6 +163,10 @@ class Rule:
     
     def _lookup_by_features(self, features: dict, seg: Seg) -> Seg:
         '''
+        :features: a dict of feature -> val mappings
+        :seg: a Seg object to return if there is no match
+
+        :return: the Seg object matching :features:, if one is in self.seginv, otherwise :seg:
         '''
         # compute vec_to_seg dict
         vec_to_seg = dict((','.join(list(f'{val}{feat}' for feat, val in _seg.features.items())), _seg) for _seg in self.seginv.segs)
