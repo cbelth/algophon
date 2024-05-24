@@ -288,7 +288,7 @@ An implementation of the model "Distant to Local" from the following paper:
 }
 ```
 
-Please see the models [README](https://github.com/cbelth/algophon/blob/d2l/algophon/models/README.md) for details.
+Please see the models [README](https://github.com/cbelth/algophon/blob/main/algophon/models/README.md) for details.
 
 ### PLP
 
