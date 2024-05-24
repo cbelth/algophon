@@ -45,6 +45,17 @@ Agree({D},{nas,son}) / {n, m} __ ∘ proj(¬[-nas])
 
 We can see that D2L learned a harmony rule (`Agree`), that leads `/D/` to harmonize in features `{nas,son}` with a `{n, m}` to its left on the tier that exclueds (exclusion indicated by the `¬` symbol) the natural class `[-nas]`.
 
+You can then call the rule (equivalently model) to predict a novel surface form:
+
+```pycon
+>>> model('m i k u g a D')
+mikugan
+>>> model.rule('t u D')
+tud
+```
+
+The result is a `SegStr` object, which is why it pretty prints without spaces.
+
 Because D2L iteratively changes representations in response to being unable to predict an alternation from adjacent dependencies, if an alternation is sufficiently predictable from adjacent dependencies, no change of representation will occur. This example demonstrates this:
 
 ```pycon
