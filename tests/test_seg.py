@@ -38,5 +38,34 @@ class TestSeg(unittest.TestCase):
         assert(len(tsh) == 1)
         assert(len(long_i) == 1)
 
+    def test_getitem(self):
+        seg = Seg(ipa='i', features={'syl': '+', 'voi': '+', 'stri': '0'})
+        assert(seg.features['syl'] == '+')
+        assert(seg.features['stri'] == '0')
+        assert(seg['syl'] == '+')
+        assert(seg['stri'] == '0')
+
+        try:
+            seg['cons']
+            assert(False)
+        except KeyError as e:
+            assert(True)
+            assert(e.__str__() == "'cons'")
+
+    def test_setitem(self):
+        seg = Seg(ipa='i', features={'syl': '-', 'voi': '+', 'stri': '+'})
+        seg['syl'] = '+'
+        seg['stri'] = '0'
+        assert(seg['syl'] == '+')
+        assert(seg['stri'] == '0')
+
+        try:
+            seg['cons'] = '-'
+            assert(False)
+        except ValueError as e:
+            assert(True)
+            assert(e.__str__() == ":feature: 'cons' not in self.features")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -40,3 +40,22 @@ class Seg:
         Length of a segment is always 1
         '''
         return 1
+    
+    def __getitem__(self, feature: str) -> str:
+        '''
+        :feature: a feature, whose value to return
+
+        :return: the value ('+', '-', '0') of the :feature:
+        '''
+        return self.features.__getitem__(feature)
+    
+    def __setitem__(self, feature: str, val: str) -> None:
+        '''
+        :feature: a feature, whose value to set
+        :val: a value to set for :feature:
+
+        :return: None
+        '''
+        if feature not in self.features:
+            raise ValueError(f":feature: '{feature}' not in self.features")
+        self.features.__setitem__(feature, val)

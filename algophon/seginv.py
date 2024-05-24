@@ -1,6 +1,8 @@
+from typing import Union
+
 from algophon.seg import Seg
 from algophon.natclass import NatClass
-from algophon.symbols import UNDERSPECIFIED
+from algophon.symbols import UNDERSPECIFIED, BOUNDARIES
 
 import pkgutil
 
@@ -9,21 +11,30 @@ class SegInv:
     A class representing an inventory of phonological segments (Seg objects).
     '''
     def __init__(self, 
-                 ipa_file_path: str=None, 
+                 add_boundary_symbols: bool=False,
+                 ipa_file_path: Union[None, str]=None, 
                  sep: str='\t'
-        ):
+        ) -> object:
+        '''
+        :add_boundary_symbols: (Optional; default False) if True, adds boundary symbols (e.g., syllabe boundaries) as Seg objects
+        :ipa_file_path: (Optional; default None) if a str path is passed, the features are used from there
+            - Default of None uses Panphon (https://github.com/dmort27/panphon) features
+        :sep: (Optional; default '\t') the char separating columns in :ipa_file_path:
+            - Only used if :ipa_file_path: is also passed
+        '''
         self._ipa_source = f'Panphon (https://github.com/dmort27/panphon)' if ipa_file_path is None else ipa_file_path
+        self._add_boundary_symbols = add_boundary_symbols
         self.ipa_file_path = ipa_file_path # uses Panphon features (https://github.com/dmort27/panphon) by default
         self.sep = sep
+
+        # stores the Seg objects in the SegInv
+        self.segs = set()
+        # maps ipa symbols to their Seg object in the SegInv
+        self._ipa_to_seg = dict()
 
         # load the _seg_to_feat_vec map
         self._load_seg_to_feat_dict()
 
-        # stores the Seg objects in the SegInv
-        self.segs = set()
-
-        # maps ipa symbols to their Seg object in the SegInv
-        self._ipa_to_seg = dict()
 
     def __str__(self) -> str:
         return f'SegInv of size {len(self)}'
@@ -74,11 +85,20 @@ class SegInv:
             if i == 0: # extract the header
                 self.feature_space = feats
             else: # add the segment to the dict
+                if self._add_boundary_symbols:
+                    feats += ['-', '-', '-', '-', '-']
                 self._seg_to_feat_vec[seg] = feats
 
         if self.ipa_file_path is None:
             # make ord('g') == 103 and ord('ɡ') == 609 the same, since panphon only as 609
             self._seg_to_feat_vec['g'] = self._seg_to_feat_vec['ɡ']
+
+        if self._add_boundary_symbols: # add boundary symbols
+            self.feature_space += ['B', 'LWB', 'RWB', 'SYLB', 'MORPHB']
+            for boundary_feat, symbol in zip(['LWB', 'RWB', 'SYLB', 'MORPHB'], 
+                                             BOUNDARIES):
+                feats = dict((feat, UNDERSPECIFIED if feat not in {'B', 'LWB', 'RWB', 'SYLB', 'MORPHB'} else '+' if feat in {'B', boundary_feat} else '-') for feat in self.feature_space)
+                self.add_custom(symbol=symbol, features=feats)
 
     def add(self, ipa_seg: str) -> None:
         '''
@@ -123,6 +143,25 @@ class SegInv:
         '''
         self.add(f'{seg}')
         return self[seg]
+    
+    def add_custom(self, symbol: str, features: dict) -> None:
+        '''
+        Adds a custom symbol (i.e., not one in the IPA inventory used to create the SegInv).
+        Useful for abstract segments like /S/ for {[s], [ʃ]}.
+
+        :symbol: A str to use as a symbol shorthand for the Seg
+        :features: a dictionary feature -> value mapping
+            - Features must exactly match those in self.feature_space
+
+        :return: None
+        '''
+        if symbol in self._seg_to_feat_vec:
+            raise ValueError(f'The symbol "{symbol}" is already a symbol in the IPA data from {self._ipa_source}.')
+        if set(features.keys()) != set(self.feature_space):
+            raise ValueError('The features do not match those in the feature space.')
+        seg = Seg(ipa=symbol, features=features)
+        self.segs.add(seg)
+        self._ipa_to_seg[symbol] = seg
     
     def extension(self, nat_class) -> set:
         '''
