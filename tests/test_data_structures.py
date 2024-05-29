@@ -6,17 +6,26 @@ from algophon.data_structures import Node, Graph
 
 class TestDataStructures(unittest.TestCase):
     def test_node_init(self):
-        node = Node('x')
+        node = Node('x', Graph())
         assert(node is not None)
         assert(node == 'x')
         assert(node != 'y')
+
+    def test_node_neighbors(self):
+        graph = Graph()
+        graph.add_edges([(1, 2), (1, 'a'), (2, 3), (3, 1), ('z', 1)])
+        assert(graph._nodes[1].neighbors() == [2, 3, 'a', 'z'])
+        assert(graph._nodes[2].neighbors() == [1, 3])
+        assert(graph._nodes[3].neighbors() == [1, 2])
+        assert(graph._nodes['a'].neighbors() == [1])
+        assert(graph._nodes['z'].neighbors() == [1])
 
     def test_graph_init(self):
         graph = Graph()
         assert(graph is not None)
         assert(graph.num_nodes() == graph.num_edges() == 0)
 
-    def test_node_getters_setters(self):
+    def test_graph_node_getters_setters(self):
         graph = Graph()
         assert(graph.num_nodes() == 0)
         graph.add_node('x')
@@ -28,7 +37,7 @@ class TestDataStructures(unittest.TestCase):
 
         assert(graph.nodes() == {'x', 'y', 'z'})
 
-    def test_edge_getters_setters(self):
+    def test_graph_edge_getters_setters(self):
         graph = Graph()
         assert(graph.num_nodes() == 0)
         assert(graph.num_edges() == 0)
@@ -44,6 +53,16 @@ class TestDataStructures(unittest.TestCase):
         
         assert(graph.nodes() == {1, 2, 3, 'x', 'y'})
         assert(graph.edges() == {(1, 2), (2, 3), ('x', 'y'), (1, 'x')})
+
+    def test_graph_search(self):
+        graph = Graph()
+        graph.add_edges([(0, 1), (0, 2), (1, 3), (1, 4), (3, 5), (5, 6), (6, 7)])
+        assert(list(graph.bfs(start_node=0)) == [0, 1, 2, 3, 4, 5, 6, 7])
+        assert(list(graph.dfs(start_node=0)) == [0, 1, 3, 5, 6, 7, 4, 2])
+
+        graph.add_edges([(3, 'a'), (3, 'z'), ('a', 'b'), ('b', 'c')])
+        assert(list(graph.bfs(start_node=0)) == [0, 1, 2, 3, 4, 5, 'a', 'z', 6, 'b', 7, 'c'])
+        assert(list(graph.dfs(start_node=0)) == [0, 1, 3, 5, 6, 7, 'a', 'b', 'c', 'z', 4, 2])
 
 if __name__ == "__main__":
     unittest.main()
