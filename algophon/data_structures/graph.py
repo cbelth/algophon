@@ -1,4 +1,4 @@
-from typing import Hashable, Iterable
+from typing import Hashable, Iterable, Union
 
 class Graph:
     '''
@@ -22,6 +22,18 @@ class Graph:
         '''
         return self._edges
 
+    def num_nodes(self) -> int:
+        '''
+        :return: the number of nodes in the graph
+        '''
+        return len(self._nodes)
+    
+    def num_edges(self) -> int:
+        '''
+        :return: the number of edges in the graph
+        '''
+        return len(self._edges)
+
     def add_node(self, node: Hashable) -> None:
         '''
         :node: a Hashable object
@@ -31,16 +43,18 @@ class Graph:
         if node not in self._nodes:
             self._nodes[node] = Node()
 
-    def add_edge(self, x: Hashable, y: Hashable) -> None:
+    def add_edge(self, x: Union[tuple, Hashable], y: Union[None, Hashable]=None) -> None:
         '''
-        :x: a Hashable object
-        :y: a Hashable object
+        :x: a Hashable object or tuple (x, y)
+        :y: a Hashable object or none
 
         :return: None
         '''
+        if isinstance(x, tuple) and len(x) == 2 and y is None:
+            x, y = x
         self.add_node(x)
         self.add_node(y)
-        self._edges((x, y))
+        self._edges.add((x, y))
 
     def add_nodes(self, nodes: Iterable) -> None:
         '''
