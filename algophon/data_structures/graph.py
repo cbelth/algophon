@@ -6,10 +6,14 @@ class Graph:
 
     Internally, the nodes are stored as a dict mapping each Hashable to a Node object.
     '''
-    def __init__(self) -> object:
+    def __init__(self, directed=False) -> object:
+        '''
+        :directed: if True, the graph is a directed graph (otherwise undirected)
+        '''
         self._nodes = dict()
         self._edges = set()
         self._neighbors = dict()
+        self.directed = directed
 
     def add_node(self, node: Hashable) -> None:
         '''
@@ -30,12 +34,15 @@ class Graph:
         '''
         if isinstance(x, tuple) and len(x) == 2 and y is None:
             x, y = x
+        # make sure x and y are in the graph's nodes
         self.add_node(x)
         self.add_node(y)
-        x, y = self._nodes[x], self._nodes[y]
-        self._edges.add((x, y))
-        self._neighbors[x].add(y)
-        self._neighbors[y].add(x)
+        x, y = self._nodes[x], self._nodes[y] # get the Node object versions
+        if self.directed or (y, x) not in self._edges: # if directed, add x -> y ; if undirected and y - x not in edges, add x - y
+            self._edges.add((x, y))
+            self._neighbors[x].add(y)
+        if not self.directed: # add y - x neighbor if undirected
+            self._neighbors[y].add(x)
 
     def add_nodes(self, nodes: Iterable) -> None:
         '''
@@ -79,6 +86,9 @@ class Graph:
         '''
         return len(self._edges)
     
+    def __str__(self) -> str:
+        return f'Graph (n = {self.num_nodes()}, m = {self.num_edges()})'
+    
     def neighbors(self, node: object):
         return sorted(self._neighbors[node], key=lambda neigh: f'{neigh}')
 
@@ -97,8 +107,8 @@ class Graph:
         visited = set()
         frontier = [start_node]
         while len(frontier) > 0:
-            node = frontier.pop(0 if typ == 'bfs' else -1)
-            visited.add(node)
+            node = frontier.pop(0 if typ == 'bfs' else -1) # pop in bfs=FIFO=0/dfs=LIFO=-1 order
+            visited.add(node) # mark the node as visited
             for neigh in node.neighbors() if typ == 'bfs' else reversed(node.neighbors()):
                 if neigh not in visited:
                     frontier.append(neigh)
