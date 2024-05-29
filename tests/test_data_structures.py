@@ -2,9 +2,15 @@ import unittest
 import sys
 
 sys.path.append('../')
-from algophon.data_structures import Graph
+from algophon.data_structures import Node, Graph
 
 class TestDataStructures(unittest.TestCase):
+    def test_node_init(self):
+        node = Node('x')
+        assert(node is not None)
+        assert(node == 'x')
+        assert(node != 'y')
+
     def test_graph_init(self):
         graph = Graph()
         assert(graph is not None)

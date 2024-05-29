@@ -41,7 +41,7 @@ class Graph:
         :return: None
         '''
         if node not in self._nodes:
-            self._nodes[node] = Node()
+            self._nodes[node] = Node(name=node)
 
     def add_edge(self, x: Union[tuple, Hashable], y: Union[None, Hashable]=None) -> None:
         '''
@@ -78,5 +78,25 @@ class Node:
     '''
     A Node class.
     '''
-    def __init__(self) -> object:
-        pass # TODO
+    def __init__(self, name: Hashable) -> object:
+        self.name = name
+
+    def __str__(self) -> str:
+        return self.name
+    
+    def __repr__(self) -> str:
+        return self.__str__()
+    
+    def __eq__(self, other: object) -> bool:
+        '''
+        :other: an object to compare to :self:
+
+        :return: True if :other: == :self:, False otherwise
+        '''
+        return self.__hash__() == other.__hash__()
+        
+    def __neq__(self, other: object) -> bool:
+        return not self.__eq__(other)
+    
+    def __hash__(self) -> int:
+        return hash(self.name)
