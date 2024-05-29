@@ -58,15 +58,17 @@ class Graph:
 
     def add_nodes(self, nodes: Iterable) -> None:
         '''
+        :nodes: an Iterable of objects to add as nodes
 
         :return: None
         '''
         for node in nodes:
             self.add_node(node=node)
 
-    def add_edges(self, edges: Iterable) -> None:
+    def add_edges(self, edges: Iterable[tuple]) -> None:
         '''
-
+        :edges: an Iterable of tuples to add as edges
+        
         :return: None
         '''
         for edge in edges:

@@ -4,7 +4,7 @@ import sys
 sys.path.append('../')
 from algophon.data_structures import Graph
 
-class TestSegStr(unittest.TestCase):
+class TestDataStructures(unittest.TestCase):
     def test_graph_init(self):
         graph = Graph()
         assert(graph is not None)
