@@ -109,5 +109,72 @@ class TestDataStructures(unittest.TestCase):
         assert(list(graph.bfs(start_node=0)) == [0, 1, 2, 3, 4, 5, 'a', 'z', 6, 'b', 7, 'c'])
         assert(list(graph.dfs(start_node=0)) == [0, 1, 3, 5, 6, 7, 'a', 'b', 'c', 'z', 4, 2])
 
+        # graph with > 1 component
+
+        graph = Graph()
+        graph.add_edges([(1, 2), (1, 3), (3, 4), # CC1
+                         (5, 6), (6, 7), (6, 8), (7, 9)]) # CC2
+        assert(list(graph.bfs()) == [1, 2, 3, 4, 5, 6, 7, 8, 9])
+        assert(list(graph.dfs()) == [1, 2, 3, 4, 5, 6, 7, 9, 8])
+
+    def test_graph_is_dag(self):
+        graph = Graph()
+        assert(not graph.is_dag()) # undirected graphs are not DAGs
+
+        # digraph 1
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([(0, 1), (1, 2), (2, 3)])
+        assert(graph.is_dag())
+        graph.add_edge((2, 0)) # add cyclce
+        assert(not graph.is_dag())
+
+        # digraph 2
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([('a', 'c'), ('c', 'd'), ('d', 'e'), ('e', 'f'), ('b', 'g'), ('g', 'h'), ('h', 'f')])
+        assert(graph.is_dag())
+        graph.add_edge(('h', 'g')) # add cyclce
+        assert(not graph.is_dag())
+        graph.add_edge(('e', 'c')) # add cyclce
+        assert(not graph.is_dag())
+
+        # digraph 3
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([
+            (1, 2), (2, 3), (2, 4), (3, 5), (3, 6), 
+            (4, 6), # cross edge
+            ('a', 'b'),
+            ('b', 2) # cross edge
+        ])
+        assert(graph.is_dag())
+        graph.add_edge(4, 1) # add cylce
+        assert(not graph.is_dag())
+
+        # digraph 4
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([
+            (1, 2), (2, 3), (2, 4), (3, 5), (3, 6), 
+            (4, 6), # cross edge
+            ('a', 'b'),
+            ('b', 2) # cross edge
+        ])
+        assert(graph.is_dag())
+        graph.add_edge(6, 'b') # add cylce
+        assert(not graph.is_dag())
+
+        # digraph 5
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([
+            (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), 
+        ])
+        assert(graph.is_dag())
+        graph.add_edge(6, 1) # add cylce
+        assert(not graph.is_dag())
+
+
 if __name__ == "__main__":
     unittest.main()

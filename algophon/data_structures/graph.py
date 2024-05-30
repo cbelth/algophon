@@ -62,16 +62,28 @@ class Graph:
         for edge in edges:
             self.add_edge(edge)
 
-    def nodes(self) -> set: # getter
+    def nodes(self, sort_key=None, reverse=False) -> set: # getter
         '''
-        :return: a set of the nodes in the graph
+        :sort_key: (Optional; default None) a function to sort the nodes according to
+        :reverse: (Optional; default False) determines whether nodes are sorted in ascending (False) or descending (True) order
+            - Only used if :sort_key: is provided
+
+        :return: a set of the nodes in the graph (or sorted list of :sort_key: is not None)
         '''
+        if sort_key is not None:
+            return sorted(self._nodes.keys(), reverse=reverse, key=sort_key)
         return set(self._nodes.keys())
     
-    def edges(self) -> set: # getter
+    def edges(self, sort_key=None, reverse=False) -> Union[set, list]: # getter
         '''
-        :return: a set of the edges in the graph
+        :sort_key: (Optional; default None) a function to sort the edges according to
+        :reverse: (Optional; default False) determines whether edges are sorted in ascending (False) or descending (True) order
+            - Only used if :sort_key: is provided
+
+        :return: a set of the edges in the graph (or sorted list if :sort_key: is not None)
         '''
+        if sort_key is not None:
+            return sorted(self._edges, reverse=reverse, key=sort_key)
         return self._edges
 
     def num_nodes(self) -> int:
@@ -94,7 +106,7 @@ class Graph:
 
     def _search(self, start_node: object, typ: str='bfs') -> Generator:
         '''
-        Implements a breadth/depth-first search over the graph. Ties in order are broken by str(node) lexiographic order.
+        Implements a breadth/depth-first search over the graph. Ties in order are broken by str(node) lexicographic order.
 
         :start_node: a node to start the search at
         :typ: either a "bfs" (breadth-first search) or "dfs" (depth-first search)
@@ -103,6 +115,8 @@ class Graph:
         '''
         if typ not in {'bfs', 'dfs'}:
             raise ValueError(f'Search Type "{typ}" is not implemented.')
+        if start_node is None: # if no start node, choose lexicographically first node
+            start_node = self.nodes(sort_key=lambda node: f'{node}')[0]
         start_node = self._nodes[start_node]
         visited = set()
         frontier = [start_node]
@@ -113,22 +127,73 @@ class Graph:
                 if neigh not in visited:
                     frontier.append(neigh)
             yield node
+            
+            if len(frontier) == 0: # see if there are any other components to search
+                diff = self.nodes().difference(visited)
+                if len(diff) > 0: # if unvisited (hence unreachable) nodes, add the lexiocographically first to the frontier
+                    frontier = [self._nodes[sorted(diff, key=lambda node: f'{node}')[0]]]
 
-    def bfs(self, start_node) -> Generator:
+    def bfs(self, start_node=None) -> Generator:
         '''
-        :start_node: a node to start the search at
+        :start_node: (Optional; default None) a node to start the search at
+            - If None, starts at lexicographically first node
 
         :return: a Generator that yields the nodes in bredth-first order starting at the :start_node:
         '''
         return self._search(start_node=start_node, typ='bfs')
     
-    def dfs(self, start_node) -> Generator:
+    def dfs(self, start_node=None) -> Generator:
         '''
-        :start_node: a node to start the search at
+        :start_node: (Optional; default None) a node to start the search at
+            - If None, starts at lexicographically first node
 
         :return: a Generator that yields the nodes in depth-first order starting at the :start_node:
         '''
         return self._search(start_node=start_node, typ='dfs')
+    
+    def _acyclic(self, node=None, visited: set=None, stack: set=None) -> bool:
+        '''
+        Checks whether a graph is acyclic using a recursive DFS.
+
+        :return: True if the graph is acyclic, False if not
+        '''
+        if not self.directed:
+            raise NotImplementedError('_acyclic() is not implemented for undirected graphs.')
+        if self.num_edges() == 0: # a graph with no edges is trivially acyclic
+            return True  
+        # make sure sets are fresh references
+        visited = set() if visited is None else visited
+        stack = set() if stack is None else stack
+        # if no node, see if there are other components to search
+        if node is None:
+            diff = self.nodes().difference(visited)
+            if len(diff) == 0: # if we made it here, there are no cycles
+                return True
+            node = self._nodes[sorted(diff, key=lambda node: f'{node}')[0]]
+        
+        if node in stack: # if node is in the stack, we have a cycle
+            return False
+        if node in visited: # do not revist nodes
+            return True
+        # update sets
+        visited.add(node)
+        stack.add(node)
+        for neigh in node.neighbors(): # recurse over neighbors
+            if not self._acyclic(node=neigh, visited=visited, stack=stack):
+                return False
+        stack.discard(node) # remove the visiting node from the stack
+
+        if len(stack) == 0: # recurse to make sure there is nothing else to traverse
+            return self._acyclic(visited=visited)
+        return True # if we made it here, there are no cycles
+
+    def is_dag(self) -> bool:
+        '''
+        Checks whether a graph is a directed, acyclic graph (DAG)
+
+        :return: True if :self: is a DAG, False if not
+        '''
+        return self.directed and self._acyclic()
 
 class Node:
     '''
