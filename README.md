@@ -281,7 +281,7 @@ iː
 
 An implementation of the model "Distant to Local" from the following paper:
 
-```
+```bibtex
 @article{belth2024tiers,
     title={A Learning-Based Account of Phonological Tiers},
     author={Belth, Caleb},
@@ -298,7 +298,7 @@ Please see the models [README](https://github.com/cbelth/algophon/blob/main/algo
 
 <span style="color:orange">Work in Progress</span>
 
-### Miaseg
+### Mɪᴀꜱᴇɢ
 
 <span style="color:orange">Work in Progress</span>
 

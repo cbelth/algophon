@@ -4,7 +4,7 @@
 
 An implementation of the model "Distant to Local" from the following paper:
 
-```
+```bibtex
 @article{belth2024tiers,
     title={A Learning-Based Account of Phonological Tiers},
     author={Belth, Caleb},
@@ -103,9 +103,18 @@ D2L learns a single rule to account for a single alternation. However, PLP (see 
 
 Comming Soon
 
-## Miaseg
+## Mɪᴀꜱᴇɢ
 
 Comming Soon
+
+```bibtex
+@inproceedings{belth2024miaseg,
+  title={Meaning-Informed Low-Resource Segmentation of Agglutinative Morphology},
+  author={Belth, Caleb},
+  booktitle={Proceedings of the Society for Computation in Linguistics},
+  year={2024}
+}
+```
 
 ## References
 
