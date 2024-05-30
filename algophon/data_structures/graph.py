@@ -215,6 +215,8 @@ class Graph:
             # if no node, compute the next node to visit
             if node is None:
                 diff = self.nodes().difference(visited)
+                if len(diff) == 0: # if no remaining nodes, return _sorted
+                    return _sorted
                 node = self._nodes[sorted(diff, key=lambda node: f'{node}', reverse=True)[0]]
 
             if node in visited: # node already visited

@@ -232,6 +232,10 @@ class TestDataStructures(unittest.TestCase):
             assert(True)
             assert(e.__str__() == 'The graph is not a DAG, and thus cannot be topologically sorted.')
 
+        # empty DAG
+        graph = Graph(directed=True)
+        assert(graph.topological_sort() == [])
+
         # DAG 1
         graph = Graph(directed=True)
         assert(graph.is_dag()) # digraph with no edges is trivially a DAG
