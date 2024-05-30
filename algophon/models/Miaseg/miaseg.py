@@ -1,6 +1,6 @@
 from typing import Iterable, Union
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from algophon import SegStr, SegInv
 from algophon.models.Miaseg import Paradigm
@@ -116,13 +116,13 @@ class Miaseg:
         '''
         orderings = defaultdict(int) # track the inferred pairwise orderings
         self.allomorphs = defaultdict(lambda: defaultdict(int)) # track the inferred allomorphs of marked features
-        self.types = defaultdict(lambda: defaultdict(int)) # track the inferred types of marked featres (SUFFIX, PREFIX)
+        types = defaultdict(lambda: defaultdict(int)) # track the inferred types of marked featres (SUFFIX, PREFIX)
         for par in self._paradigms.values(): # iterate over paradigms
             for diff in par.get_one_diff_pairs():
                 affix, typ = self._get_marking_from_one_off(src=diff['src'], tgt=diff['tgt'])
                 if affix is not None and typ is not None: # if a marking found, tabulate it
                     self.allomorphs[diff['feat']][affix] += 1
-                    self.types[diff['feat']][typ] += 1
+                    types[diff['feat']][typ] += 1
                     if typ == SUFFIX:
                         # every feature of src probably comes before the suffix marking the diff
                         for other_feature in diff['shared_feats']:
@@ -131,7 +131,8 @@ class Miaseg:
                         # every feture of src probbly comes after the prefix marking the diff
                         for other_feature in diff['shared_feats']:
                             orderings[(diff['feat'], other_feature)] += 1 # diff_feat -> other_feature
-
+        # retain only the most frequent type of each feature
+        self.types = dict((feat, sorted(_typs.items(), reverse=True, key=lambda it: it[-1])[0][0]) for feat, _typs in types.items())
         # remove conflicting x <-> y by choosing the one with higher frequency
         orderings = list((x, y) for x, y in list(orderings.keys()) if orderings[(x, y)] >= orderings[(y, x)])
         # build DAG encoding ordering
@@ -152,3 +153,83 @@ class Miaseg:
         if tgt.endswith(src): # feat marked with prefix
             return tgt[:len(tgt) - len(src)], PREFIX
         return None, None # cannot determine how feature marked
+    
+    def segment(self, word: Union[str, SegStr], features: Union[tuple, set], with_analysis: bool=True) -> Union[list, tuple[list, list]]:
+        '''
+        Segment a word given the features marked in it.
+
+        :word: should be a str or SegStr object
+            - SegStr should only be passed if the parameter use_ipa was True when creating the Miaseg object
+        :features: should a set or tuple of features marked in the word
+        :with_analysis: (Optiona; default True) if True, returns a morphological analysis (gloss) with the segmentation
+
+        :return:
+            - tuple containing a list of morpheme forms and a list of morpheme meanings (gloss) if :with_analysis: == True
+            - list of morpheme forms if :with_analysis: == False
+            - If any :features: are have not been attested during training, returns ([:word:], ['FAILED']) if :with_analysis: == True or [:word:]
+        '''
+        if self.use_ipa and isinstance(word, str): # convert str to SegStr if we are using IPA
+            word = SegStr(word, seginv=self.seginv)
+        elif isinstance(word, SegStr):
+            raise ValueError(f'Cannot segment SegStr because {self} object was not constructed with "use_ipa = True"')
+        if any(feat not in self.allomorphs for feat in features):
+            return ([word], ['FAILED']) if with_analysis else [word]
+
+        # compute prfxs and sufxs        
+        prfxs, sufxs = self._get_affixes(features=set(features))
+        # create a new object that we can edit without changing :word:
+        temp = str(word) if isinstance(word, str) else SegStr(segs=list(word._segs), seginv=self.seginv)
+
+        # init prfx and sufx forms
+        prfx_forms = list()
+        sufx_forms = list()
+
+        # iterate over prfxs left-to-right
+        for prfx in prfxs:
+            cand_forms = list(self.allomorphs[prfx].keys())
+            matches = list(cand for cand in cand_forms if temp.startswith(cand))
+            if len(matches) > 0:
+                # choose longest match (breaking ties by frequency)
+                best_match = sorted(matches, reverse=True, key=lambda cand: (len(cand), self.allomorphs[prfx][cand]))[0]
+            else: # if no matches, match most frequent length of attested forms
+                most_freq_len = Counter(list(len(cand) for cand in cand_forms)).most_common(1)[0][0]
+                best_match = temp[:most_freq_len]
+            temp = temp[len(best_match):]
+            prfx_forms.append(best_match)
+        # iterate over sufxs right-to-left
+        for sufx in reversed(sufxs):
+            cand_forms = list(self.allomorphs[sufx].keys())
+            matches = list(cand for cand in cand_forms if temp.endswith(cand))
+            if len(matches) > 0:
+                # choose longest match (breaking ties by frequency)
+                best_match = sorted(matches, reverse=True, key=lambda cand: (len(cand), self.allomorphs[sufx][cand]))[0]
+            else: # if no matches, match most frequent length of attested forms
+                most_freq_len = Counter(list(len(cand) for cand in cand_forms)).most_common(1)[0][0]
+                best_match = temp[-most_freq_len:]
+            temp = temp[:-len(best_match)]
+            sufx_forms.insert(0, best_match)
+
+        # compute segmentation and analysis
+        ana = prfxs + ['ROOT'] + sufxs
+        seg = prfx_forms + [temp] + sufx_forms
+
+        return (seg, ana) if with_analysis else seg
+
+    def _get_affixes(self, features: set) -> tuple[list, list]:
+        '''
+        :features: should a set or tuple of features marked in the word
+
+        :return: a tuple containing a list of prfxs and a list of sufxs
+        '''
+        prfxs = list()
+        sufxs = list()
+        for feature in sorted(features, key=lambda feat: self.order.index(feat)):
+            if self.types[feature] == PREFIX:
+                prfxs.append(feature)
+            else:
+                sufxs.append(feature)
+        return prfxs, sufxs
+
+        
+
+        

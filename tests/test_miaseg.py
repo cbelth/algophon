@@ -156,8 +156,8 @@ class TestMiaseg(unittest.TestCase):
         assert(set(model.allomorphs.keys()) == set(model.types.keys()) == {'PL', 'DAT'})
         assert(model.allomorphs['PL'] == {'ok': 1})
         assert(model.allomorphs['DAT'] == {'nak': 1, 'nek': 1})
-        assert(model.types['PL'] == {'SUFFIX': 1})
-        assert(model.types['DAT'] == {'SUFFIX': 2})
+        assert(model.types['PL'] == 'SUFFIX')
+        assert(model.types['DAT'] == 'SUFFIX')
         assert(model.order == ['PL', 'DAT'])
 
         # ipa version
@@ -169,8 +169,8 @@ class TestMiaseg(unittest.TestCase):
         assert(set(model.allomorphs.keys()) == set(model.types.keys()) == {'PL', 'DAT'})
         assert(model.allomorphs['PL'] == {'o k': 1})
         assert(model.allomorphs['DAT'] == {'n ɒ k': 1, 'n ɛ k': 1})
-        assert(model.types['PL'] == {'SUFFIX': 1})
-        assert(model.types['DAT'] == {'SUFFIX': 2})
+        assert(model.types['PL'] == 'SUFFIX')
+        assert(model.types['DAT'] == 'SUFFIX')
         assert(model.order == ['PL', 'DAT'])
 
         # toy example
@@ -183,19 +183,19 @@ class TestMiaseg(unittest.TestCase):
         assert(model.allomorphs['a'] == {'-a': 3, '-A': 1})
         assert(model.allomorphs['b'] == {'-b': 3, '-B': 2})
         assert(model.allomorphs['c'] == {'c-': 2, 'C-': 1})
-        assert(model.types['a'] == {'SUFFIX': 4})
-        assert(model.types['b'] == {'SUFFIX': 5})
-        assert(model.types['c'] == {'PREFIX': 3})
+        assert(model.types['a'] == 'SUFFIX')
+        assert(model.types['b'] == 'SUFFIX')
+        assert(model.types['c'] == 'PREFIX')
         assert(model.order == ['c', 'a', 'b'])
 
-    def test_miaseg__find_allomorphs(self):
+    def test_miaseg_train(self):
         model = Miaseg()
         model.train(train=PAPER_EXAMPLE)
         assert(set(model.allomorphs.keys()) == set(model.types.keys()) == {'PL', 'DAT'})
         assert(model.allomorphs['PL'] == {'ok': 1})
         assert(model.allomorphs['DAT'] == {'nak': 1, 'nek': 1})
-        assert(model.types['PL'] == {'SUFFIX': 1})
-        assert(model.types['DAT'] == {'SUFFIX': 2})
+        assert(model.types['PL'] == 'SUFFIX')
+        assert(model.types['DAT'] == 'SUFFIX')
         assert(model.order == ['PL', 'DAT'])
 
         # ipa version
@@ -204,8 +204,8 @@ class TestMiaseg(unittest.TestCase):
         assert(set(model.allomorphs.keys()) == set(model.types.keys()) == {'PL', 'DAT'})
         assert(model.allomorphs['PL'] == {'o k': 1})
         assert(model.allomorphs['DAT'] == {'n ɒ k': 1, 'n ɛ k': 1})
-        assert(model.types['PL'] == {'SUFFIX': 1})
-        assert(model.types['DAT'] == {'SUFFIX': 2})
+        assert(model.types['PL'] == 'SUFFIX')
+        assert(model.types['DAT'] == 'SUFFIX')
         assert(model.order == ['PL', 'DAT'])
 
         # toy example
@@ -215,10 +215,47 @@ class TestMiaseg(unittest.TestCase):
         assert(model.allomorphs['a'] == {'-a': 3, '-A': 1})
         assert(model.allomorphs['b'] == {'-b': 3, '-B': 2})
         assert(model.allomorphs['c'] == {'c-': 2, 'C-': 1})
-        assert(model.types['a'] == {'SUFFIX': 4})
-        assert(model.types['b'] == {'SUFFIX': 5})
-        assert(model.types['c'] == {'PREFIX': 3})
+        assert(model.types['a'] == 'SUFFIX')
+        assert(model.types['b'] == 'SUFFIX')
+        assert(model.types['c'] == 'PREFIX')
         assert(model.order == ['c', 'a', 'b'])
+
+    def test_miaseg__get_affixes(self):
+        model = Miaseg()
+        model.train(train=TOY_EXAMPLE)
+        assert(model._get_affixes({'a', 'b', 'c'}) == (['c'], ['a', 'b']))
+
+    def test_miaseg_segment(self):
+        model = Miaseg()
+        model.train(train=PAPER_EXAMPLE)
+
+        model = Miaseg()
+        model.train(train=TOY_EXAMPLE)
+        assert(model.segment(word='new_root', features=set(), with_analysis=False) == ['new_root'])
+        assert(model.segment(word='new_root', features=set()) == (['new_root'], 
+                                                                  ['ROOT']))
+        assert(model.segment(word='new_root-a', features={'a'}, with_analysis=False) == ['new_root', '-a'])
+        assert(model.segment(word='new_root-a', features={'a'}) == (['new_root', '-a'], 
+                                                                  ['ROOT', 'a']))
+        assert(model.segment(word='new_root-a-b', features={'a', 'b'}, with_analysis=False) == ['new_root', '-a', '-b'])
+        assert(model.segment(word='new_root-a-b', features={'a', 'b'}) == (['new_root', '-a', '-b'], 
+                                                                           ['ROOT', 'a', 'b']))
+        assert(model.segment(word='c-new_root-a-b', features={'a', 'b', 'c'}, with_analysis=False) == ['c-', 'new_root', '-a', '-b'])
+        assert(model.segment(word='c-new_root-a-b', features={'a', 'b', 'c'}) == (['c-', 'new_root', '-a', '-b'], 
+                                                                                  ['c', 'ROOT', 'a', 'b']))
+        
+        # length resorting
+        assert(model.segment(word='d-new_root-a-b', features={'a', 'b', 'c'}) == (['d-', 'new_root', '-a', '-b'], 
+                                                                                  ['c', 'ROOT', 'a', 'b']))
+        assert(model.segment(word='c-new_root-a-d', features={'a', 'b', 'c'}) == (['c-', 'new_root', '-a', '-d'], 
+                                                                                  ['c', 'ROOT', 'a', 'b']))
+        assert(model.segment(word='d-new_root-f-e', features={'a', 'b', 'c'}) == (['d-', 'new_root', '-f', '-e'], 
+                                                                                  ['c', 'ROOT', 'a', 'b']))
+        
+        # new feature
+        assert(model.segment(word='d-new_root-a-b', features={'a', 'b', 'd'}) == (['d-new_root-a-b'], ['FAILED']))
+        assert(model.segment(word='d-new_root-a-b', features={'a', 'b', 'd'}, with_analysis=False) == ['d-new_root-a-b'])
+
 
 if __name__ == "__main__":
     unittest.main()
