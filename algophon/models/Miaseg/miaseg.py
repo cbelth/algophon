@@ -1,7 +1,13 @@
 from typing import Iterable, Union
 
+from collections import defaultdict
+
 from algophon import SegStr, SegInv
 from algophon.models.Miaseg import Paradigm
+from algophon.data_structures import Graph
+
+SUFFIX = 'SUFFIX'
+PREFIX = 'PREFIX'
 
 class Miaseg:
     '''
@@ -68,11 +74,11 @@ class Miaseg:
                 triples.add((root, word, feats))
         return triples
     
-    def train(self, triples: Iterable[tuple[str, Union[str, SegStr], Union[set, tuple]]]) -> object:
+    def train(self, train: Iterable[tuple[str, Union[str, SegStr], Union[set, tuple]]]) -> object:
         '''
         Trains the Miaseg model on an iterable of (root, word, features) triples
 
-        :triples: an Iterable of (root, word, feats) triples
+        :train: an Iterable of (root, word, feats) triples
             - Each :root: should be a unique str identifier
             - Each :word: should be a str or SegStr object
             - Each :features: should a set or tuple of features marked in the word
@@ -81,11 +87,12 @@ class Miaseg:
         :return: the Miaseg model object
         '''
         if self.use_ipa: # convert each word to a SegStr if we are using IPA
-            triples = list((root, 
-                            SegStr(word, seginv=self.seginv) if not isinstance(word, SegStr) else word, 
-                            tuple(sorted(feats)))
-                                for root, word, feats in triples)
-        self._setup_paradigms(triples) # set up paradigms
+            train = list((root, 
+                          SegStr(word, seginv=self.seginv) if not isinstance(word, SegStr) else word, 
+                          tuple(sorted(feats)))
+                            for root, word, feats in train)
+        self._setup_paradigms(train) # set up paradigms
+        self._find_allomorphs(train) # find allomorphs
         # TODO
 
         return self
@@ -94,7 +101,7 @@ class Miaseg:
         '''
         Sets up the model's paradigms
 
-        :triples: an Iterable of (root, word, feats) triples
+        :train: an Iterable of (root, word, feats) triples
         '''
         self._paradigms = dict() # init paradigms object
         for root, word, features in train:
@@ -102,3 +109,48 @@ class Miaseg:
                 self._paradigms[root] = Paradigm(root=root)
             # add the word to the paradigm
             self._paradigms[root].add_word(word=word, features=features)
+
+    def _find_allomorphs(self, train: Iterable) -> None:
+        '''
+        Computes possible allomorphs for each feature, and orders them.
+
+        :train: an Iterable of (root, word, feats) triples
+        '''
+        orderings = defaultdict(int) # track the inferred pairwise orderings
+        self.allomorphs = defaultdict(lambda: defaultdict(int)) # track the inferred allomorphs of marked features
+        self.types = defaultdict(lambda: defaultdict(int)) # track the inferred types of marked featres (SUFFIX, PREFIX)
+        for par in self._paradigms.values(): # iterate over paradigms
+            for diff in par.get_one_diff_pairs():
+                affix, typ = self._get_marking_from_one_off(src=diff['src'], tgt=diff['tgt'])
+                if affix is not None and typ is not None: # if a marking found, tabulate it
+                    self.allomorphs[diff['feat']][affix] += 1
+                    self.types[diff['feat']][typ] += 1
+                    if typ == SUFFIX:
+                        # every feature of src probably comes before the suffix marking the diff
+                        for other_feature in diff['shared_feats']:
+                            orderings[(other_feature, diff['feat'])] += 1 # other_feature -> diff_feat
+                    else: # PREFIX
+                        # every feture of src probbly comes after the prefix marking the diff
+                        for other_feature in diff['shared_feats']:
+                            orderings[(diff['feat'], other_feature)] += 1 # diff_feat -> other_feature
+
+        # remove conflicting x <-> y by choosing the one with higher frequency
+        orderings = list((x, y) for x, y in list(orderings.keys()) if orderings[(x, y)] >= orderings[(y, x)])
+        # build DAG encoding ordering
+        graph = Graph(directed=True)
+        graph.add_edges(orderings)
+        # topologically sort the graph
+        self.order = graph.topological_sort()
+
+    def _get_marking_from_one_off(self, src: Union[str, SegStr], tgt: Union[str,  SegStr]) -> tuple[Union[str, SegStr], str]:
+        '''
+        :src: a str/SegStr that has fewer marked features
+        :tgt: a str/SegStr that has more marked features
+
+        :return: a tuple containing the affix and the affix type
+        '''
+        if tgt.startswith(src): # feat marked with suffix
+            return tgt[len(src):], SUFFIX
+        if tgt.endswith(src): # feat marked with prefix
+            return tgt[:len(tgt) - len(src)], PREFIX
+        return None, None # cannot determine how feature marked
