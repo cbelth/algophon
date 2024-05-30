@@ -117,6 +117,23 @@ class TestDataStructures(unittest.TestCase):
         assert(list(graph.bfs()) == [1, 2, 3, 4, 5, 6, 7, 8, 9])
         assert(list(graph.dfs()) == [1, 2, 3, 4, 5, 6, 7, 9, 8])
 
+        # circle graph
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([
+            (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 1)
+        ])
+        assert(list(graph.dfs()) == [1, 2, 3, 4, 5, 6])
+
+        # DAG with non-lex node as only one with no parent
+
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([
+            ('z', 2), (2, 3), (3, 4), (4, 5), (5, 6),
+        ])
+        assert(list(graph.dfs()) == [2, 3, 4, 5, 6, 'z'])
+
     def test_graph_is_dag(self):
         graph = Graph()
         assert(not graph.is_dag()) # undirected graphs are not DAGs
@@ -175,6 +192,94 @@ class TestDataStructures(unittest.TestCase):
         graph.add_edge(6, 1) # add cylce
         assert(not graph.is_dag())
 
+        # digraph 6
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([
+            ('z', 2), (2, 3), (3, 4), (4, 5), (5, 6),
+        ])
+        assert(graph.is_dag())
+        graph.add_edge(6, 'z') # add cylce
+        assert(not graph.is_dag())
+
+        # digraph 7
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([
+            (9, 5), (9, 4), (9, 1), (9, 6),
+            (5, 10), (4, 3), (1, 4), (1, 8), (6, 1), (8, 3),
+            (2, 7), (2, 12), (7, 11),
+        ])
+        assert(graph.is_dag())
+        graph.add_edge(3, 9) # add cylce
+        assert(not graph.is_dag())
+
+    def test_graph_topological_sort(self):
+        # non-DAG
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([
+            (1, 2), (2, 3), (2, 4), (3, 5), (3, 6), 
+            (4, 6), # cross edge
+            ('a', 'b'),
+            ('b', 2), # cross edge
+            (4, 1), # cycle
+        ])
+        try:
+            graph.topological_sort()
+            assert(False)
+        except ValueError as e:
+            assert(True)
+            assert(e.__str__() == 'The graph is not a DAG, and thus cannot be topologically sorted.')
+
+        # DAG 1
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([
+            (1, 2), (2, 3), (2, 4), (3, 5), (3, 6), 
+            (4, 6), # cross edge
+            ('a', 'b'),
+            ('b', 2), # cross edge
+        ])
+        top_sort = graph.topological_sort()
+        assert(len(top_sort) == graph.num_nodes())
+        for node in [2, 3, 4, 5, 6]: # node 1 descendents
+            assert(top_sort.index(1) < top_sort.index(node))
+        for node in [3, 4, 5, 6]: # node 2 descendents
+            assert(top_sort.index(2) < top_sort.index(node))
+        for node in [5, 6]: # node 3 descendents
+            assert(top_sort.index(3) < top_sort.index(node))
+        assert(top_sort.index(4) < top_sort.index(6)) # node 4 descendents
+        for node in ['b', 2, 3, 4, 5, 6]: # node a descendents
+            assert(top_sort.index('a') < top_sort.index(node))
+        for node in [2, 3, 4, 5, 6]: # node b descendents
+            assert(top_sort.index('b') < top_sort.index(node))
+
+        # DAG 2
+        graph = Graph(directed=True)
+        assert(graph.is_dag()) # digraph with no edges is trivially a DAG
+        graph.add_edges([
+            (9, 5), (9, 4), (9, 1), (9, 6),
+            (5, 10), (4, 3), (1, 4), (1, 8), (6, 1), (8, 3),
+            (2, 7), (2, 12), (7, 11),
+        ])
+        assert(graph.num_edges() == 13)
+        top_sort = graph.topological_sort()
+        assert(len(top_sort) == graph.num_nodes())
+        # first component
+        for node in [5, 10, 4, 3, 1, 6, 8]: # node 9 descendents
+            assert(top_sort.index(9) < top_sort.index(node))
+        for node in [1, 4, 3, 8]: # node 6 descendents
+            assert(top_sort.index(6) < top_sort.index(node))
+        for node in [4, 3, 8]: # node 1 descendents
+            assert(top_sort.index(1) < top_sort.index(node))
+        assert(top_sort.index(4) < top_sort.index(3)) # node 4 descendent
+        assert(top_sort.index(5) < top_sort.index(10)) # node 5 descendent
+        assert(top_sort.index(8) < top_sort.index(3)) # node 8 descendent
+        # second component
+        for node in [7, 11, 12]: # node 2 descendents
+            assert(top_sort.index(2) < top_sort.index(node))
+        assert(top_sort.index(7) < top_sort.index(11)) # node 7 descendent
 
 if __name__ == "__main__":
     unittest.main()

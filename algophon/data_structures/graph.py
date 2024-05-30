@@ -101,7 +101,12 @@ class Graph:
     def __str__(self) -> str:
         return f'Graph (n = {self.num_nodes()}, m = {self.num_edges()})'
     
-    def neighbors(self, node: object):
+    def neighbors(self, node: object) -> list:
+        '''
+        :node: a node in the graph
+        
+        :return: a list of the neighbors of :node: sorted lexicographically
+        '''
         return sorted(self._neighbors[node], key=lambda neigh: f'{neigh}')
 
     def _search(self, start_node: object, typ: str='bfs') -> Generator:
@@ -130,7 +135,7 @@ class Graph:
             
             if len(frontier) == 0: # see if there are any other components to search
                 diff = self.nodes().difference(visited)
-                if len(diff) > 0: # if unvisited (hence unreachable) nodes, add the lexiocographically first to the frontier
+                if len(diff) > 0: # if visited (hence unreachable) nodes, add the lexiocographically first to the frontier
                     frontier = [self._nodes[sorted(diff, key=lambda node: f'{node}')[0]]]
 
     def bfs(self, start_node=None) -> Generator:
@@ -194,6 +199,38 @@ class Graph:
         :return: True if :self: is a DAG, False if not
         '''
         return self.directed and self._acyclic()
+    
+    def topological_sort(self) -> list:
+        '''
+        :return: a toplogical sort of the graphs nodes
+        '''
+        if not self.is_dag():
+            raise ValueError('The graph is not a DAG, and thus cannot be topologically sorted.')
+
+        stack = set()
+        def _recursive_topological_sort(node=None, _sorted: list=None, visited: set=None) -> list:
+            # make sure sets/lists are fresh references
+            _sorted = list() if _sorted is None else _sorted
+            visited = set() if visited is None else visited
+            # if no node, compute the next node to visit
+            if node is None:
+                diff = self.nodes().difference(visited)
+                node = self._nodes[sorted(diff, key=lambda node: f'{node}', reverse=True)[0]]
+
+            if node in visited: # node already visited
+                return _sorted
+            stack.add(node) # add node to stack
+            visited.add(node) # mark node as visited
+            for neigh in reversed(node.neighbors()):
+                _recursive_topological_sort(node=neigh, _sorted=_sorted, visited=visited)
+            _sorted.insert(0, node)
+            stack.discard(node) # remove node from stack
+            if len(stack) == 0 and len(visited) != self.num_nodes(): # if there is nothing on the stack, recurse on remaining nodes
+                return _recursive_topological_sort(_sorted=_sorted, visited=visited)
+            return _sorted
+
+        # compute topological sort recursively
+        return _recursive_topological_sort()
 
 class Node:
     '''
@@ -225,5 +262,8 @@ class Node:
     def __hash__(self) -> int:
         return hash(self.name)
     
-    def neighbors(self):
+    def neighbors(self) -> set:
+        '''
+        :return: a list of the neighbors of :node: sorted lexicographically
+        '''
         return self.graph.neighbors(self)
