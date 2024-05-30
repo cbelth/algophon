@@ -93,8 +93,6 @@ class Miaseg:
                             for root, word, feats in train)
         self._setup_paradigms(train) # set up paradigms
         self._find_allomorphs(train) # find allomorphs
-        # TODO
-
         return self
     
     def _setup_paradigms(self, train: Iterable) -> None:

@@ -188,5 +188,37 @@ class TestMiaseg(unittest.TestCase):
         assert(model.types['c'] == {'PREFIX': 3})
         assert(model.order == ['c', 'a', 'b'])
 
+    def test_miaseg__find_allomorphs(self):
+        model = Miaseg()
+        model.train(train=PAPER_EXAMPLE)
+        assert(set(model.allomorphs.keys()) == set(model.types.keys()) == {'PL', 'DAT'})
+        assert(model.allomorphs['PL'] == {'ok': 1})
+        assert(model.allomorphs['DAT'] == {'nak': 1, 'nek': 1})
+        assert(model.types['PL'] == {'SUFFIX': 1})
+        assert(model.types['DAT'] == {'SUFFIX': 2})
+        assert(model.order == ['PL', 'DAT'])
+
+        # ipa version
+        model = Miaseg(use_ipa=True)
+        model.train(train=IPA_PAPER_EXAMPLE)
+        assert(set(model.allomorphs.keys()) == set(model.types.keys()) == {'PL', 'DAT'})
+        assert(model.allomorphs['PL'] == {'o k': 1})
+        assert(model.allomorphs['DAT'] == {'n ɒ k': 1, 'n ɛ k': 1})
+        assert(model.types['PL'] == {'SUFFIX': 1})
+        assert(model.types['DAT'] == {'SUFFIX': 2})
+        assert(model.order == ['PL', 'DAT'])
+
+        # toy example
+        model = Miaseg()
+        model.train(train=TOY_EXAMPLE)
+        assert(set(model.allomorphs.keys()) == set(model.types.keys()) == {'a', 'b', 'c'})
+        assert(model.allomorphs['a'] == {'-a': 3, '-A': 1})
+        assert(model.allomorphs['b'] == {'-b': 3, '-B': 2})
+        assert(model.allomorphs['c'] == {'c-': 2, 'C-': 1})
+        assert(model.types['a'] == {'SUFFIX': 4})
+        assert(model.types['b'] == {'SUFFIX': 5})
+        assert(model.types['c'] == {'PREFIX': 3})
+        assert(model.order == ['c', 'a', 'b'])
+
 if __name__ == "__main__":
     unittest.main()
