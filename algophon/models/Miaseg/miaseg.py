@@ -1,5 +1,7 @@
-from typing import Hashable, Iterable, Union
+from typing import Iterable, Union
+
 from algophon import SegStr, SegInv
+from algophon.models.Miaseg import Paradigm
 
 class Miaseg:
     '''
@@ -66,19 +68,37 @@ class Miaseg:
                 triples.add((root, word, feats))
         return triples
     
-    def train(self, triples: Iterable[tuple[Hashable, Union[str, SegStr], Union[set, tuple]]]) -> object:
+    def train(self, triples: Iterable[tuple[str, Union[str, SegStr], Union[set, tuple]]]) -> object:
         '''
-        Trains the Miaseg model on an iterable of (root, word, feats) triples
+        Trains the Miaseg model on an iterable of (root, word, features) triples
 
-        :triples: an iterable of (root, word, feats) triples
-            - Each :root: should be a unique Hashable identifier
+        :triples: an Iterable of (root, word, feats) triples
+            - Each :root: should be a unique str identifier
             - Each :word: should be a str or SegStr object
-            - Each :feats: should a set or tuple of features marked in the word
+            - Each :features: should a set or tuple of features marked in the word
             - The model only considers unique triples
         
         :return: the Miaseg model object
         '''
-
+        if self.use_ipa: # convert each word to a SegStr if we are using IPA
+            triples = list((root, 
+                            SegStr(word, seginv=self.seginv) if not isinstance(word, SegStr) else word, 
+                            tuple(sorted(feats)))
+                                for root, word, feats in triples)
+        self._setup_paradigms(triples) # set up paradigms
         # TODO
 
         return self
+    
+    def _setup_paradigms(self, train: Iterable) -> None:
+        '''
+        Sets up the model's paradigms
+
+        :triples: an Iterable of (root, word, feats) triples
+        '''
+        self._paradigms = dict() # init paradigms object
+        for root, word, features in train:
+            if root not in self._paradigms: # init this paradigm
+                self._paradigms[root] = Paradigm(root=root)
+            # add the word to the paradigm
+            self._paradigms[root].add_word(word=word, features=features)
