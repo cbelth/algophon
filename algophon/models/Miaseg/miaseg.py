@@ -81,7 +81,7 @@ class Miaseg:
         :train: an Iterable of (root, word, feats) triples
             - Each :root: should be a unique str identifier
             - Each :word: should be a str or SegStr object
-            - Each :features: should a set or tuple of features marked in the word
+            - Each :features: should be a set or tuple of features marked in the word
             - The model only considers unique triples
         
         :return: the Miaseg model object
@@ -160,7 +160,7 @@ class Miaseg:
 
         :word: should be a str or SegStr object
             - SegStr should only be passed if the parameter use_ipa was True when creating the Miaseg object
-        :features: should a set or tuple of features marked in the word
+        :features: should be a set or tuple of features marked in the word
         :with_analysis: (Optiona; default True) if True, returns a morphological analysis (gloss) with the segmentation
 
         :return:
@@ -217,7 +217,7 @@ class Miaseg:
 
     def _get_affixes(self, features: set) -> tuple[list, list]:
         '''
-        :features: should a set or tuple of features marked in the word
+        :features: should be a set or tuple of features marked in the word
 
         :return: a tuple containing a list of prfxs and a list of sufxs
         '''
