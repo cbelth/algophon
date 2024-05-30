@@ -1,11 +1,36 @@
 from typing import Hashable, Iterable, Union
-from algophon import SegStr
+from algophon import SegStr, SegInv
 
 class Miaseg:
     '''
+    An implementation of the model "Meaning Informed Segmentation of Agglutinative Morphology" (Mɪᴀꜱᴇɢ) from Belth (2024)
+
+    Belth, Caleb. 2024. Meaning-Informed Low-Resource Segmentation of Agglutinative Morphology. SCiL.
+    @inproceedings{belth2024miaseg,
+        title={Meaning-Informed Low-Resource Segmentation of Agglutinative Morphology},
+        author={Belth, Caleb},
+        booktitle={Proceedings of the Society for Computation in Linguistics},
+        year={2024}
+    }
     '''
-    def __init__(self):
-        pass
+
+    def __init__(self, 
+                 use_ipa: bool=False,
+                 ipa_file_path: Union[None, str]=None, 
+                 sep: str='\t') -> object:
+        '''
+        :use_ipa: (Optional; default False) if True, interprets words as sequences of IPA symbols
+            - if False (default), interprets words as orthography
+        :ipa_file_path: (Optional; default None) if a str path is passed, the features are used from there
+            - Default of None uses Panphon (https://github.com/dmort27/panphon) features
+            - Only used if :orthography: == False
+        :sep: (Optional; default '\t') the char separating columns in :ipa_file_path:
+            - Only used if :ipa_file_path: is also passed
+            - Only used if :orthography: == False
+        '''
+        self.use_ipa = use_ipa
+        if use_ipa: # if we are using IPA, set up a SegInv object
+            self.seginv = SegInv(add_boundary_symbols=True, ipa_file_path=ipa_file_path, sep=sep)
 
     def __str__(self) -> str:
         return 'Mɪᴀꜱᴇɢ'
