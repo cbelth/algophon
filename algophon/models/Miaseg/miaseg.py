@@ -95,6 +95,31 @@ class Miaseg:
         self._find_allomorphs(train) # find allomorphs
         return self
     
+    def train_and_segment(self, train: Iterable[tuple[str, Union[str, SegStr], Union[set, tuple]]], with_analysis: bool=True) -> list:
+        '''
+        The same as train(), but also segments the training data.
+
+        :train: an Iterable of (root, word, feats) triples
+            - Each :root: should be a unique str identifier
+            - Each :word: should be a str or SegStr object
+            - Each :features: should be a set or tuple of features marked in the word
+            - The model only considers unique triples
+        :with_analysis: (Optiona; default True) if True, returns a morphological analysis (gloss) with each segmentation
+        
+        :return: a list of tuples, each containing
+            - the triple (index 0)
+            - the segmentation of the word (index 1)
+            - (if "with_nalysis=True") the morphological analysis/gloss of the word (index 2)
+        '''
+        self.train(train=train)
+        results = list()
+        for triple in train:
+            _, word, features = triple
+            seg, *ana = self.segment(word=word, features=features, with_analysis=with_analysis)
+            bundle = (triple, seg, ana[0]) if with_analysis else (triple, seg)
+            results.append(bundle)
+        return results
+    
     def _setup_paradigms(self, train: Iterable) -> None:
         '''
         Sets up the model's paradigms
