@@ -111,12 +111,12 @@ class Miaseg:
             - the segmentation of the word (index 1)
             - (if "with_nalysis=True") the morphological analysis/gloss of the word (index 2)
         '''
-        self.train(train=train)
-        results = list()
-        for triple in train:
+        self.train(train=train) # train the model
+        results = list() # tabluate results
+        for triple in train: # segment each triple
             _, word, features = triple
             seg, *ana = self.segment(word=word, features=features, with_analysis=with_analysis)
-            bundle = (triple, seg, ana[0]) if with_analysis else (triple, seg)
+            bundle = (triple, seg, ana[0]) if with_analysis else (triple, seg) # bundle the results
             results.append(bundle)
         return results
     
