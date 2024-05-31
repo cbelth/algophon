@@ -162,14 +162,14 @@ If you want to train the model on one set of data and then segment a separate se
 You can also segment IPA data via `SegStr` objects (Mɪᴀꜱᴇɢ builds these for you internally). To do so, pass `use_ipa=True` as a keyword argument to the model constructor.
 
 ```pycon
->>> pairs = [
+>>> triples = [
     ('TEACHER', 't ɒ n aː r', ()),
     ('TEACHER', 't ɒ n aː r o k', ('PL',)),
     ('TEACHER', 't ɒ n aː r o k n ɒ k', ('PL', 'DAT')),
     ('PERSON', 's ɛ m eː j', ()),
     ('PERSON', 's ɛ m eː j n ɛ k', ('DAT',)),
 ]
->>> model = Miaseg(use_ipa=True).train(pairs) # train returns the model object, allowing this one-liner
+>>> model = Miaseg(use_ipa=True).train(triples) # train returns the model object, allowing this one-liner
 >>> model.segment('l aː ɲ o k n ɒ k', features={'PL', 'DAT'})
 ([laːɲ, ok, nɒk], ['ROOT', 'PL', 'DAT'])
 >>> model('ɛ l n ø k n ɛ k', features={'DAT'})
