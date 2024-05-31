@@ -1,0 +1,5 @@
+TEACHER	t ɒ n aː r	
+TEACHER	t ɒ n aː r o k	PL
+TEACHER	t ɒ n aː r o k n ɒ k	PL;DAT
+PERSON	s ɛ m eː j	
+PERSON	s ɛ m eː j n ɛ k	DAT

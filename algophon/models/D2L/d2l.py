@@ -64,7 +64,7 @@ class D2L:
         :path: the location of the training file
         :sep: (Optional; default '\t') the character used to separate URs from SRs in the file
 
-        :return: the D2L model object
+        :return: the set of loaded (UR, SR) pairs
         '''
         pairs = set()
         with open(path, 'r') as f:

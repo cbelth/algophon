@@ -232,7 +232,7 @@ class Graph:
             return _sorted
 
         # compute topological sort recursively
-        return _recursive_topological_sort()
+        return list(node.name for node in _recursive_topological_sort())
 
 class Node:
     '''

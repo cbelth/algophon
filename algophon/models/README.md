@@ -2,9 +2,9 @@
 
 ## D2L
 
-An implementation of the model "Distant to Local" from the following paper:
+An implementation of the model "Distant to Local" from the following [paper](https://cbelth.github.io/public/assets/documents/belth-LI-2024.pdf):
 
-```
+```bibtex
 @article{belth2024tiers,
     title={A Learning-Based Account of Phonological Tiers},
     author={Belth, Caleb},
@@ -103,10 +103,95 @@ D2L learns a single rule to account for a single alternation. However, PLP (see 
 
 Comming Soon
 
-## Miaseg
+## Mɪᴀꜱᴇɢ
 
-Comming Soon
+An implementation of the model "Meaning Informed Segmentation of Agglutinative Morphology" (Mɪᴀꜱᴇɢ) from the following [paper](https://cbelth.github.io/public/assets/documents/SCiL_2024_Morphological_Segmentation.pdf):
+
+```bibtex
+@inproceedings{belth2024miaseg,
+  title={Meaning-Informed Low-Resource Segmentation of Agglutinative Morphology},
+  author={Belth, Caleb},
+  booktitle={Proceedings of the Society for Computation in Linguistics},
+  year={2024}
+}
+```
+
+Mɪᴀꜱᴇɢ morphologically segments agglutinative morphology based on morphological features, exploiting them to identify how differences between closely-related surface forms are marked. Mɪᴀꜱᴇɢ is unsupervised, but requires words be annotated with a set of morphological features. This approach offers the possibility of improvement over unsupervised approaches that operate over only surface forms, while simplifying the data-annotation demands of supervised approaches needing ground-truth segmentations.
+For example, Unimorph 3.0 (McCarthy et al.,2020) contains morphological features for 169 languages, but segmentations—via MorphyNet (Batsuren et al., 2021)—for only 15.
+
+Here is an example of running the model on a toy Hungarian dataset (example from the paper). The simplest way to use the model is to segment a given dataset. This can be done via the `train_and_segment` method.
+
+```pycon
+from algophon.models.Miaseg import Miaseg
+
+>>> model = Miaseg() # create a model object
+>>> triples = [ # construct some training triples
+    ('TEACHER', 'tanár', ()),
+    ('TEACHER', 'tanárok', ('PL',)),
+    ('TEACHER', 'tanároknak', ('PL', 'DAT')),
+    ('PERSON', 'személy', ()),
+    ('PERSON', 'személynek', ('DAT',)),
+]
+>>> segmentations = model.train_and_segment(triples)
+```
+
+The `train_and_segment` method returns a `list` of `tuple` objects. The `list` contains one entry for each item in the input data, and each `tuple` contains the input triple being segmented (at index `0`), a list of the segmented morphemes (at index `1`), and a `list` analysis/gloss of the segmentation (at index `2`):
+
+```pycon
+>>> for in_triple, segmentation, analysis in segmentations:
+        print(f'Input {in_triple}\tsegmentation: {segmentation}\tanalysis: {analysis}')
+Input ('TEACHER', 'tanár', ())	segmentation: ['tanár']	analysis: ['ROOT']
+Input ('TEACHER', 'tanárok', ('PL',))	segmentation: ['tanár', 'ok']	analysis: ['ROOT', 'PL']
+Input ('TEACHER', 'tanároknak', ('PL', 'DAT'))	segmentation: ['tanár', 'ok', 'nak']	analysis: ['ROOT', 'PL', 'DAT']
+Input ('PERSON', 'személy', ())	segmentation: ['személy']	analysis: ['ROOT']
+Input ('PERSON', 'személynek', ('DAT',))	segmentation: ['személy', 'nek']	analysis: ['ROOT', 'DAT']
+>>>
+```
+
+You can also segment new words with the `segment` method or, equivalently, calling the trained model object directly.
+
+```pycon
+>>> model.segment(word='lányoknak', features={'PL', 'DAT'})
+(['lány', 'ok', 'nak'], ['ROOT', 'PL', 'DAT'])
+>>> model(word='elnöknek', features={'DAT'})
+(['elnök', 'nek'], ['ROOT', 'DAT'])
+```
+
+If you want to train the model on one set of data and then segment a separate set of data, you can use the `train` method, and then `segment` to segment the new data.
+
+You can also segment IPA data via `SegStr` objects (Mɪᴀꜱᴇɢ builds these for you internally). To do so, pass `use_ipa=True` as a keyword argument to the model constructor.
+
+```pycon
+>>> triples = [
+    ('TEACHER', 't ɒ n aː r', ()),
+    ('TEACHER', 't ɒ n aː r o k', ('PL',)),
+    ('TEACHER', 't ɒ n aː r o k n ɒ k', ('PL', 'DAT')),
+    ('PERSON', 's ɛ m eː j', ()),
+    ('PERSON', 's ɛ m eː j n ɛ k', ('DAT',)),
+]
+>>> model = Miaseg(use_ipa=True).train(triples) # train returns the model object, allowing this one-liner
+>>> model.segment('l aː ɲ o k n ɒ k', features={'PL', 'DAT'})
+([laːɲ, ok, nɒk], ['ROOT', 'PL', 'DAT'])
+>>> model('ɛ l n ø k n ɛ k', features={'DAT'})
+([ɛlnøk, nɛk], ['ROOT', 'DAT'])
+```
+
+The segmented morphemes are `SegStr` objects, which is why they pretty print without spaces. 
+
+If you have training data in a file, you can run a model directly on it via `train_on_file` (file-based equivalent of `train`) or `train_and_segment_file` (file-based equivalent of `train_and_segment`):
+
+```pycon
+>>> segmentations = model.train_and_segment_file(path=<path_to_data>, sep='\t', feature_sep=';')
+```
+
+The data should contain three columns, separated by `sep`. The first column should be a unique identifier for the root, the second column the word, and the third column the morphological features (each feature separated by `feature_sep`). By default, `sep='\t'` and `feature_sep=';'`. Notice that this matches Unimorph's data format of three columns (*lemma, inflection, features*).
+
+### Applications and Limitations
+
+The model is designed specifically for agglutinative morphology. Other types of morphology (e.g., fusional concatenation, non-concatenative stem changes, reduplication) would likely require extensions of the model. Please see section 5 of the [paper](https://cbelth.github.io/public/assets/documents/SCiL_2024_Morphological_Segmentation.pdf) for more detailed discussion.
 
 ## References
 
 - Yang, C. (2016). *The price of linguistic productivity: How children learn to break the rules of language.* MIT press.
+- Arya D McCarthy, Christo Kirov, Matteo Grella, Amrit Nidhi, Patrick Xia, Kyle Gorman, Ekaterina Vylomova, Sabrina J Mielke, Garrett Nicolai, Miikka Silfverberg, et al. (2020). Unimorph 3.0: Universal morphology. In *Proceedings of The 12th language resources and evaluation conference*, pages 3922–3931. European Language Resources Association.
+- Khuyagbaatar Batsuren, Gábor Bella, and Fausto Giunchiglia. (2021). Morphynet: a large multilingual database of derivational and inflectional morphology. In *Proceedings of the 18th sigmorphon workshop on computational research in phonetics, phonology, and morphology*, pages 39–48.
