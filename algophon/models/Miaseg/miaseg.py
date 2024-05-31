@@ -39,6 +39,7 @@ class Miaseg:
         self.use_ipa = use_ipa
         if use_ipa: # if we are using IPA, set up a SegInv object
             self.seginv = SegInv(add_boundary_symbols=True, ipa_file_path=ipa_file_path, sep=sep)
+        self._trained = False # model not trained initially (so cannot segment)
 
     def __str__(self) -> str:
         return 'Mɪᴀꜱᴇɢ'
@@ -46,32 +47,35 @@ class Miaseg:
     def __repr__(self) -> str:
         return self.__str__()
 
-    def train_on_file(self, path: str, sep: str='\t') -> object:
+    def train_on_file(self, path: str, sep: str='\t', feature_sep: str=';') -> object:
         '''
         The same as self.train, but loads triples from a file instead of having them passed as an argument.
 
         :path: the location of the training file
         :sep: (Optional; default '\t') the character used to separate columns in the file
+        :feature_sep: (Optional; default ';') the character used to separate features in the file
 
         :return: the Miaseg model object
         '''
-        triples = self.load_train(path, sep=sep)
+        triples = self.load_train(path, sep=sep, feature_sep=feature_sep)
         return self.train(triples)
     
-    def load_train(self, path: str, sep: str='\t') -> set:
+    def load_train(self, path: str, sep: str='\t', feature_sep: str=';') -> set:
         '''
         Loads (root, word, feats) triples from a file.
 
         :path: the location of the training file
         :sep: (Optional; default '\t') the character used to separate columns in the file
+        :feature_sep: (Optional; default ';') the character used to separate features in the file
 
         :return: the set of loaded triples
         '''
-        triples = set()
+        triples = list()
         with open(path, 'r') as f:
             for line in f:
-                root, word, feats = line.strip().split(sep)
-                triples.add((root, word, feats))
+                root, word, feats = line.strip('\n').split(sep)
+                feats = tuple(feats.split(feature_sep)) if len(feats) > 0 else ()
+                triples.append((root, word, feats))
         return triples
     
     def train(self, train: Iterable[tuple[str, Union[str, SegStr], Union[set, tuple]]]) -> object:
@@ -93,7 +97,25 @@ class Miaseg:
                             for root, word, feats in train)
         self._setup_paradigms(train) # set up paradigms
         self._find_allomorphs(train) # find allomorphs
+        self._trained = True
         return self
+    
+    def train_and_segment_file(self, path: str, sep: str='\t', feature_sep: str=';', with_analysis: bool=True) -> list:
+        '''
+        The same as self.train_and_segment, but loads triples from a file instead of having them passed as an argument.
+
+        :path: the location of the training file
+        :sep: (Optional; default '\t') the character used to separate columns in the file
+        :feature_sep: (Optional; default ';') the character used to separate features in the file
+        :with_analysis: (Optiona; default True) if True, returns a morphological analysis (gloss) with each segmentation
+
+         :return: a list of tuples, each containing
+            - the triple (index 0)
+            - the segmentation of the word (index 1)
+            - (if "with_nalysis=True") the morphological analysis/gloss of the word (index 2)
+        '''
+        triples = self.load_train(path, sep=sep, feature_sep=feature_sep)
+        return self.train_and_segment(train=triples, with_analysis=with_analysis)
     
     def train_and_segment(self, train: Iterable[tuple[str, Union[str, SegStr], Union[set, tuple]]], with_analysis: bool=True) -> list:
         '''
@@ -193,6 +215,8 @@ class Miaseg:
             - list of morpheme forms if :with_analysis: == False
             - If any :features: are have not been attested during training, returns ([:word:], ['FAILED']) if :with_analysis: == True or [:word:]
         '''
+        if not self._trained:
+            raise ValueError(f'{self} must be trained in order to segment.') 
         if self.use_ipa and isinstance(word, str): # convert str to SegStr if we are using IPA
             word = SegStr(word, seginv=self.seginv)
         elif isinstance(word, SegStr):
@@ -239,6 +263,9 @@ class Miaseg:
         seg = prfx_forms + [temp] + sufx_forms
 
         return (seg, ana) if with_analysis else seg
+    
+    # calling a Miaseg object amounts to calling its segment() method
+    __call__ = segment
 
     def _get_affixes(self, features: set) -> tuple[list, list]:
         '''

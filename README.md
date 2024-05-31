@@ -2,13 +2,11 @@
 
 **Code for working on computational phonology and morphology in Python.** 
 
-The project is based on code developed by [Caleb Belth](https://cbelth.github.io/) during the course of his PhD; the title of his [dissertation](https://cbelth.github.io/public/assets/documents/belth_dissertation.pdf), *Towards an Algorithmic Account of Phonological Rules and Representations*, serves as the origin for the repository's name *algophon*.
+This package is based on code developed by [Caleb Belth](https://cbelth.github.io/) during the course of his PhD; the title of his [dissertation](https://cbelth.github.io/public/assets/documents/belth_dissertation.pdf), *Towards an Algorithmic Account of Phonological Rules and Representations*, serves as the origin for the repository's name *algophon*.
 
-This is a <span style="color:orange">work in progress</span>. The PyPI distribution and documentation will be updated as the project progresses! The initial plan for the project is to include:
+The package is under active development! The PyPI distribution and documentation are updated as the project progresses. The package includes:
 1. Handy tools for working with strings of phonological segments.
 2. Implementations of computational learning models.
-
-Item (1) will be implemented first.
 
 **Suggestions are welcome!**
 
@@ -88,7 +86,7 @@ t͡ʃ
 >>> long_i = Seg(ipa=f'i{LONG}')
 >>> print(long_i)
 iː
->> print(len(long_i))
+>>> print(len(long_i))
 1
 ```
 
@@ -300,7 +298,18 @@ Please see the models [README](https://github.com/cbelth/algophon/blob/main/algo
 
 ### Mɪᴀꜱᴇɢ
 
-<span style="color:orange">Work in Progress</span>
+An implementation of the model "Meaning Informed Segmentation of Agglutinative Morphology" (Mɪᴀꜱᴇɢ) from the following paper:
+
+```bibtex
+@inproceedings{belth2024miaseg,
+  title={Meaning-Informed Low-Resource Segmentation of Agglutinative Morphology},
+  author={Belth, Caleb},
+  booktitle={Proceedings of the Society for Computation in Linguistics},
+  year={2024}
+}
+```
+
+Please see the models [README](https://github.com/cbelth/algophon/blob/main/algophon/models/README.md) for details.
 
 ### Other Models
 
@@ -318,6 +327,8 @@ If you use this package in your research, you can use the following citation:
   school={{University of Michigan}}
 }
 ```
+
+If you use one of the computational models, please cite the corresponding paper(s).
 
 ## References
 
