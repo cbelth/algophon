@@ -198,6 +198,9 @@ class TestMiaseg(unittest.TestCase):
         assert(model.types['DAT'] == 'SUFFIX')
         assert(model.order == ['PL', 'DAT'])
 
+        # compare to train_on_file
+        assert(model.train_on_file('data/miaseg/paper_example.txt'))
+
         # ipa version
         model = Miaseg(use_ipa=True)
         assert(model.train(train=IPA_PAPER_EXAMPLE))
@@ -207,6 +210,9 @@ class TestMiaseg(unittest.TestCase):
         assert(model.types['PL'] == 'SUFFIX')
         assert(model.types['DAT'] == 'SUFFIX')
         assert(model.order == ['PL', 'DAT'])
+
+        # compare to train_on_file
+        assert(model.train_on_file('data/miaseg/ipa_paper_example.txt'))
 
         # toy example
         model = Miaseg()
@@ -219,6 +225,9 @@ class TestMiaseg(unittest.TestCase):
         assert(model.types['b'] == 'SUFFIX')
         assert(model.types['c'] == 'PREFIX')
         assert(model.order == ['c', 'a', 'b'])
+
+        # compare to train_on_file
+        assert(model.train_on_file('data/miaseg/toy_example.txt'))
 
     def test_miaseg__get_affixes(self):
         model = Miaseg()
@@ -255,14 +264,6 @@ class TestMiaseg(unittest.TestCase):
 
         # paper example
 
-# IPA_PAPER_EXAMPLE = [
-#     ('TEACHER', 't ɒ n aː r', ()),
-#     ('TEACHER', 't ɒ n aː r o k', ('PL',)),
-#     ('TEACHER', 't ɒ n aː r o k n ɒ k', ('PL', 'DAT')),
-#     ('PERSON', 's ɛ m eː j', ()),
-#     ('PERSON', 's ɛ m eː j n ɛ k', ('DAT',)),
-# ]
-
         model = Miaseg()
         model.train(train=PAPER_EXAMPLE)
         assert(model.segment(word='tanár', features=set()) == (['tanár'],
@@ -275,6 +276,11 @@ class TestMiaseg(unittest.TestCase):
                                                                  ['ROOT']))
         assert(model.segment(word='személynek', features={'DAT'}) == (['személy', 'nek'],
                                                                       ['ROOT', 'DAT']))
+        # real new words
+        assert(model.segment(word='lányoknak', features={'PL', 'DAT'}) == (['lány', 'ok', 'nak'],
+                                                                           ['ROOT', 'PL', 'DAT']))
+        assert(model(word='elnöknek', features={'DAT'}) == (['elnök', 'nek'], 
+                                                            ['ROOT', 'DAT']))
         # made up new word
         assert(model.segment(word='atoknak', features={'PL', 'DAT'}) == (['at', 'ok', 'nak'],
                                                                          ['ROOT', 'PL', 'DAT']))
@@ -292,9 +298,23 @@ class TestMiaseg(unittest.TestCase):
                                                                  ['ROOT']))
         assert(model.segment(word='s ɛ m eː j n ɛ k', features={'DAT'}) == (['s ɛ m eː j', 'n ɛ k'],
                                                                       ['ROOT', 'DAT']))
+        # real new words
+        assert(model.segment('l aː ɲ o k n ɒ k', features={'PL', 'DAT'}) == (['l aː ɲ', 'o k', 'n ɒ k'],
+                                                                             ['ROOT', 'PL', 'DAT']))
+        assert(model('ɛ l n ø k n ɛ k', features={'DAT'}) == (['ɛ l n ø k', 'n ɛ k'],
+                                                              ['ROOT', 'DAT']))
         # made up new word
         assert(model.segment(word='a t o k n ɒ k', features={'PL', 'DAT'}) == (['a t', 'o k', 'n ɒ k'],
                                                                                ['ROOT', 'PL', 'DAT']))
+        
+        # test untrained model
+        model = Miaseg()
+        try:
+            model.segment(word='tanároknak', features={'PL', 'DAT'})
+            assert(False)
+        except ValueError as e:
+            assert(True)
+            assert(e.__str__() == 'Mɪᴀꜱᴇɢ must be trained in order to segment.')
 
     def test_miaseg_train_and_segment(self):
         model = Miaseg()
@@ -307,7 +327,23 @@ class TestMiaseg(unittest.TestCase):
         results = model.train_and_segment(train=TOY_EXAMPLE, with_analysis=False)
         assert(len(results) == len(TOY_EXAMPLE))
         assert(len(bundle) == 2 for bundle in results)
+        # check train_and_segment_file
+        assert(results == model.train_and_segment_file('data/miaseg/toy_example.txt', with_analysis=False))
 
+        model = Miaseg(use_ipa=True)
+        results = model.train_and_segment(train=IPA_PAPER_EXAMPLE)
+        assert(len(results) == len(IPA_PAPER_EXAMPLE))
+        assert(len(bundle) == 3 for bundle in results)
+        for triple, seg, ana in results:
+            assert(set(triple[2]) == set(ana).difference({'ROOT'}))
+            if len(seg) == 1:
+                assert(triple[1] == seg[0])
+            elif len(seg) == 2:
+                assert(triple[1] == seg[0] + seg[1])
+            else:
+                assert(triple[1] == seg[0] + seg[1] + seg[2])
+        # check train_and_segment_file
+        assert(results == model.train_and_segment_file('data/miaseg/ipa_paper_example.txt'))
 
 if __name__ == "__main__":
     unittest.main()

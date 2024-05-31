@@ -1,0 +1,15 @@
+r1	root1	
+r1	root1-a	a
+r1	root1-b	b
+r1	root1-a-b	a;b
+r1	c-root1-a-b	a;b;c
+r2	root2	
+r2	root2-A	a
+r2	root2-B	b
+r2	root2-A-B	a;b
+r2	C-root2-A-B	a;b;c
+r3	root3	
+r3	root3-a	a
+r3	root3-b	b
+r3	root3-b-a	a;b
+r3	c-root3-b-a	a;b;c

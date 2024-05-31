@@ -1,0 +1,5 @@
+TEACHER	tanár	
+TEACHER	tanárok	PL
+TEACHER	tanároknak	PL;DAT
+PERSON	személy	
+PERSON	személynek	DAT
