@@ -281,7 +281,3 @@ class Miaseg:
             else:
                 sufxs.append(feature)
         return prfxs, sufxs
-
-        
-
-        
