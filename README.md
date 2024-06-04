@@ -294,7 +294,7 @@ Please see the models [README](https://github.com/cbelth/algophon/blob/main/algo
 
 ### PLP
 
-<span style="color:orange">Work in Progress</span>
+<span style="color:orange">[Work in Progress](https://github.com/cbelth/algophon/pull/5)</span>
 
 ### Mɪᴀꜱᴇɢ
 
