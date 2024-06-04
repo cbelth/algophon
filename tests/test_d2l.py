@@ -439,7 +439,7 @@ class TestD2L(unittest.TestCase):
         assert(isinstance(list(setup_pairs)[0][1], SegStr))
         assert(d2l._discrepancy is not None)
         assert(d2l._discrepancy.alternations == {('S', 's'), ('S', 'ʃ')})
-        assert(len(d2l._discrepancy.instances) == 8)
+        assert(len(d2l._discrepancy.URs) == 6)
 
         # make sure duplicates are removed
 
@@ -463,7 +463,7 @@ class TestD2L(unittest.TestCase):
         assert(isinstance(list(setup_pairs)[0][1], SegStr))
         assert(d2l._discrepancy is not None)
         assert(d2l._discrepancy.alternations == {('S', 's'), ('S', 'ʃ')})
-        assert(len(d2l._discrepancy.instances) == 8)
+        assert(len(d2l._discrepancy.URs) == 6)
 
     def test_D2L__get_tier_adj_contexts(self):
         pairs = [

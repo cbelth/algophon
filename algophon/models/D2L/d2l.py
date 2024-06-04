@@ -187,7 +187,7 @@ class D2L:
                     if self._discrepancy is None: # init discrepancy if it does not exist
                         self._discrepancy = Discrepancy(feat_diff)
                     # tabulate this pair's contribution to the discrepancy
-                    self._discrepancy.tabulate(ur=ur, i=i, ur_seg=ur_seg, sr_seg=sr_seg)
+                    self._discrepancy.tabulate(ur=ur, ur_seg=ur_seg, sr_seg=sr_seg)
 
         return setup_pairs
     
