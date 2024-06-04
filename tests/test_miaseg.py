@@ -285,11 +285,20 @@ class TestMiaseg(unittest.TestCase):
         assert(model.segment(word='atoknak', features={'PL', 'DAT'}) == (['at', 'ok', 'nak'],
                                                                          ['ROOT', 'PL', 'DAT']))
         
+        # throw exception if passing a SegStr
+        try:
+            model.segment(word=SegStr('t ɒ n aː r', SegInv()), features=set()) == (['t ɒ n aː r'], ['ROOT'])
+            assert(False)
+        except ValueError as e:
+            assert(e.__str__() == 'Cannot segment SegStr because Mɪᴀꜱᴇɢ object was not constructed with "use_ipa = True"')
+
+        
         # ipa version
         model = Miaseg(use_ipa=True)
         model.train(train=IPA_PAPER_EXAMPLE)
         assert(model.segment(word='t ɒ n aː r', features=set()) == (['t ɒ n aː r'],
                                                                     ['ROOT']))
+        assert(model.segment(word=SegStr('t ɒ n aː r', model.seginv), features=set()) == (['t ɒ n aː r'], ['ROOT'])) # words with SegStr too
         assert(model.segment(word='t ɒ n aː r o k', features={'PL'}) == (['t ɒ n aː r', 'o k'],
                                                                          ['ROOT', 'PL']))
         assert(model.segment(word='t ɒ n aː r o k n ɒ k', features={'PL', 'DAT'}) == (['t ɒ n aː r', 'o k', 'n ɒ k'],

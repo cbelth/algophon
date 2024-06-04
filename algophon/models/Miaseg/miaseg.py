@@ -219,7 +219,7 @@ class Miaseg:
             raise ValueError(f'{self} must be trained in order to segment.') 
         if self.use_ipa and isinstance(word, str): # convert str to SegStr if we are using IPA
             word = SegStr(word, seginv=self.seginv)
-        elif isinstance(word, SegStr):
+        elif not self.use_ipa and isinstance(word, SegStr):
             raise ValueError(f'Cannot segment SegStr because {self} object was not constructed with "use_ipa = True"')
         if any(feat not in self.allomorphs for feat in features):
             return ([word], ['FAILED']) if with_analysis else [word]
