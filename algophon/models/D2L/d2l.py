@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from algophon import SegInv, SegStr, NatClass
 from algophon.symbols import UNDERSPECIFIED, BOUNDARIES
-from algophon.models.D2L import Discrepancy, Rule, Tier
+from algophon.models.D2L import Discrepancy, D2LRule, Tier
 from algophon.utils import tsp
 
 class D2L:
@@ -191,7 +191,7 @@ class D2L:
 
         return setup_pairs
     
-    def build_rule(self, pairs: set, delset: set=set(), tier=None, harmony: bool=True, discrepancy: Union[None, Discrepancy]=None) -> Rule:
+    def build_rule(self, pairs: set, delset: set=set(), tier=None, harmony: bool=True, discrepancy: Union[None, Discrepancy]=None) -> D2LRule:
         '''
         Builds a rule recursively.
 
@@ -208,13 +208,13 @@ class D2L:
 
         lctxts, rctxts = self._get_tier_adj_contexts(discrepancy=discrepancy, tier=tier) # compute ctxts
         # build left rule
-        left_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, left_ctxts=lctxts, tier=tier, harmony=harmony)
+        left_rule = D2LRule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, left_ctxts=lctxts, tier=tier, harmony=harmony)
         left_underextensions = left_rule.underextension_SRs(pairs=pairs)
         if len(left_underextensions) > 0:
             left_default_sr = sorted(left_underextensions.items(), reverse=True, key=lambda it: it[-1])[0][0]
             left_rule.set_defaults(dict((feat, left_default_sr.features[feat]) for feat in discrepancy.feature_diff))
         # build right rule
-        right_rule = Rule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, right_ctxts=rctxts, tier=tier, harmony=harmony)
+        right_rule = D2LRule(seginv=self.seginv, target=target, features=discrepancy.feature_diff, right_ctxts=rctxts, tier=tier, harmony=harmony)
         right_underextensions = right_rule.underextension_SRs(pairs=pairs)
         if len(right_underextensions) > 0:
             right_default_sr = sorted(right_underextensions.items(), reverse=True, key=lambda it: it[-1])[0][0]

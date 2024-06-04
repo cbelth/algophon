@@ -3,7 +3,7 @@ import sys
 
 sys.path.append('../')
 from algophon import SegInv, SegStr, NatClass
-from algophon.models.D2L import Tier, Rule, D2L
+from algophon.models.D2L import Tier, D2LRule, D2L
 from algophon.symbols import LWB, RWB, MORPHB, SYLB, UNDERSPECIFIED
 
 class TestD2L(unittest.TestCase):
@@ -49,25 +49,25 @@ class TestD2L(unittest.TestCase):
 
     def test_rule_init(self):
         seginv = SegInv()
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=NatClass(feats={'+strid'}, seginv=seginv))
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=NatClass(feats={'+strid'}, seginv=seginv))
         assert(rule and rule.left_ctxts is not None and rule.right_ctxts is None)
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts={'S', 's', 'ʃ'})
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts={'S', 's', 'ʃ'})
         assert(rule and rule.left_ctxts is not None and rule.right_ctxts is None)
 
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, right_ctxts=NatClass(feats={'+strid'}, seginv=seginv))
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, right_ctxts=NatClass(feats={'+strid'}, seginv=seginv))
         assert(rule and rule.left_ctxts is None and rule.right_ctxts is not None)
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, right_ctxts={'S', 's', 'ʃ'})
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, right_ctxts={'S', 's', 'ʃ'})
         assert(rule and rule.left_ctxts is None and rule.right_ctxts is not None)
 
         try:
-            Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=NatClass(feats={'+strid'}, seginv=seginv), right_ctxts={'S', 's', 'ʃ'})
+            D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=NatClass(feats={'+strid'}, seginv=seginv), right_ctxts={'S', 's', 'ʃ'})
             assert(False)
         except ValueError as e:
             assert(e.__str__() == 'D2L Rule cannot have both left and right contexts.')
             assert(True)
 
         try:
-            Rule(seginv=seginv, features={'ant', 'distr'}, target={'S'})
+            D2LRule(seginv=seginv, features={'ant', 'distr'}, target={'S'})
             assert(False)
         except ValueError as e:
             assert(e.__str__() == 'D2L Rule must have either left or right contexts.')
@@ -89,7 +89,7 @@ class TestD2L(unittest.TestCase):
         tier = Tier(seginv=seginv, feats={'-syl'})
         
         # harmony
-        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
+        rule = D2LRule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
 
         assert(rule._apply(seg=seginv['C1'], ctxt=seginv['m']) == 'm')
         assert(rule._apply(seg=seginv['C1'], ctxt=seginv['n']) == 'm')
@@ -105,7 +105,7 @@ class TestD2L(unittest.TestCase):
 
 
         # disharmony
-        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
+        rule = D2LRule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
 
         assert(rule._apply(seg=seginv['C1'], ctxt=seginv['m']) == 'b')
         assert(rule._apply(seg=seginv['C1'], ctxt=seginv['n']) == 'b')
@@ -133,7 +133,7 @@ class TestD2L(unittest.TestCase):
         seginv.add_custom('C2', features=features) # n ~ d
         
         # harmony
-        rule = Rule(seginv=seginv, features={'son', 'nas'}, defaults={'son': '-', 'nas': '-'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv))
+        rule = D2LRule(seginv=seginv, features={'son', 'nas'}, defaults={'son': '-', 'nas': '-'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv))
 
         assert(rule._apply_default(seg=seginv['C1']) == 'b')
         assert(rule._apply_default(seg=seginv['C2']) == 'd')
@@ -155,7 +155,7 @@ class TestD2L(unittest.TestCase):
         
         # left-to-right (harmony)
 
-        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
+        rule = D2LRule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
 
         segstr = SegStr('b u m e t u C2 i l', seginv=seginv)
         assert(rule._predictions(segstr) == [(6, 'd')])
@@ -174,7 +174,7 @@ class TestD2L(unittest.TestCase):
 
         # right-to-left (harmony)
 
-        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, right_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
+        rule = D2LRule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, right_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
 
         segstr = SegStr('l i C2 u t e m u b', seginv=seginv)
         assert(rule._predictions(segstr) == [(2, 'd')])
@@ -193,7 +193,7 @@ class TestD2L(unittest.TestCase):
 
         # left-to-right (disharmony)
 
-        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
+        rule = D2LRule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
 
         segstr = SegStr('b u m e t u C2 i l', seginv=seginv)
         assert(rule._predictions(segstr) == [(6, 'n')])
@@ -212,7 +212,7 @@ class TestD2L(unittest.TestCase):
 
         # right-to-left (disharmony)
 
-        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, right_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
+        rule = D2LRule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, right_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
 
         segstr = SegStr('l i C2 u t e m u b', seginv=seginv)
         assert(rule._predictions(segstr) == [(2, 'n')])
@@ -248,13 +248,13 @@ class TestD2L(unittest.TestCase):
 
         strid = NatClass(feats={'+strid'}, seginv=seginv)
         tier = Tier(seginv=seginv, feats=strid)
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, defaults={'ant': '+', 'distr': '-'}, left_ctxts=strid, tier=tier)
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, defaults={'ant': '+', 'distr': '-'}, left_ctxts=strid, tier=tier)
         assert(rule._predictions(SegStr('ʃ o k u S i S', seginv=seginv)) == [(4, 'ʃ'), (6, 'ʃ')])
         assert(rule._predictions(SegStr('u t S', seginv=seginv)) == [(2, 's')])
 
         cons = NatClass(feats={'+cons'}, seginv=seginv)
         tier = Tier(seginv=seginv, feats=cons)
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=cons, tier=tier)
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=cons, tier=tier)
         assert(rule._predictions(SegStr('ʃ o k u S i S', seginv=seginv)) == [(4, 'S'), (6, 'S')])
         assert(rule._predictions(SegStr('u t S', seginv=seginv)) == [(2, 's')])
 
@@ -274,7 +274,7 @@ class TestD2L(unittest.TestCase):
         tier = Tier(seginv=seginv, feats={'-syl'})
         
         # left-to-right (harmony)
-        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
+        rule = D2LRule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
         assert(rule('b u m e t u C2 i l') == 'b u m e t u d i l')
         assert(rule('b u m e C1 i l') == 'b u m e m i l')
         assert(rule('b u m e C1 i C2') == 'b u m e m i n')
@@ -282,7 +282,7 @@ class TestD2L(unittest.TestCase):
         assert(rule('b u m e') == 'b u m e')
 
         # right-to-left (harmony)
-        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, right_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
+        rule = D2LRule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, right_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier)
         assert(rule('l i C2 u t e m u b') == 'l i d u t e m u b')
         assert(rule('l i C1 e m u b') == 'l i m e m u b')
         assert(rule('C2 i C1 e m u b') == 'n i m e m u b')
@@ -290,7 +290,7 @@ class TestD2L(unittest.TestCase):
         assert(rule('b u m e') == 'b u m e')
 
         # left-to-right (disharmony)
-        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
+        rule = D2LRule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, left_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
         assert(rule('b u m e t u C2 i l') == 'b u m e t u n i l')
         assert(rule('b u m e C1 i l') == 'b u m e b i l')
         assert(rule('b u m e C1 i C2') == 'b u m e b i n')
@@ -298,7 +298,7 @@ class TestD2L(unittest.TestCase):
         assert(rule('b u m e') == 'b u m e')
 
         # right-to-left (disharmony)
-        rule = Rule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, right_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
+        rule = D2LRule(seginv=seginv, features={'son', 'nas'}, target={'C1', 'C2'}, right_ctxts=NatClass({'-syl'}, seginv=seginv), tier=tier, harmony=False)
         assert(rule('l i C2 u t e m u b') == 'l i n u t e m u b')
         assert(rule('l i C1 e m u b') == 'l i b e m u b')
         assert(rule('C2 i C1 e m u b') == 'n i b e m u b')
@@ -322,17 +322,17 @@ class TestD2L(unittest.TestCase):
         seginv['ʃ']['strid'] = '+'
         seginv['S']['strid'] = '+'
 
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=seginv.segs)
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=seginv.segs)
         assert(rule.tsp_stats(pairs) == (8, 1))
 
         cons = NatClass(feats={'+cons'}, seginv=seginv)
         tier = Tier(seginv=seginv, feats=cons)
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=cons, tier=tier)
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=cons, tier=tier)
         assert(rule.tsp_stats(pairs) == (8, 2)) # this is diff from paper b.c. the feature specificaions involve distr, which is 0 for /k/
 
         strid = NatClass(feats={'+strid'}, seginv=seginv)
         tier = Tier(seginv=seginv, feats=strid)
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, defaults={'ant': '+', 'distr': '-'}, left_ctxts=strid, tier=tier)
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, defaults={'ant': '+', 'distr': '-'}, left_ctxts=strid, tier=tier)
         assert(rule.tsp_stats(pairs) == (8, 8))
 
     def test_rule_underextension_SRs(self):
@@ -354,13 +354,13 @@ class TestD2L(unittest.TestCase):
 
         strid = NatClass(feats={'+strid'}, seginv=seginv)
         tier = Tier(seginv=seginv, feats=strid)
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=strid, tier=tier)
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts=strid, tier=tier)
         assert(rule.underextension_SRs(pairs) == {'s': 3, 'ʃ': 1})
 
     def test_rule_set_defaults(self):
         seginv = SegInv()
         seginv.add_segs({'s', 'ʃ'})
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts={'s', 'ʃ'})
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant', 'distr'}, left_ctxts={'s', 'ʃ'})
         assert(rule.defaults is None)
         rule.set_defaults(defaults={'ant': seginv['s']['ant'], 'distr': seginv['s']['distr']})
         assert(len(rule.defaults) == 2)
@@ -394,24 +394,24 @@ class TestD2L(unittest.TestCase):
         seginv['ʃ']['distr'] = '+'
         seginv['S']['distr'] = '+'
 
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant'}, left_ctxts=seginv.segs)
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant'}, left_ctxts=seginv.segs)
         assert(rule.errant_ctxts(pairs) == {'u', 'i', 'a', 'o'})
 
         cons = NatClass(feats={'+cons'}, seginv=seginv)
         tier = Tier(seginv=seginv, feats=cons)
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant'}, left_ctxts=cons, tier=tier)
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant'}, left_ctxts=cons, tier=tier)
         assert(rule.errant_ctxts(pairs) == {'n', 'k', 'g', 'ʃ'})
 
         strid = NatClass(feats={'+strid'}, seginv=seginv)
         tier = Tier(seginv=seginv, feats=strid)
-        rule = Rule(seginv=seginv, target={'S'}, features={'ant'}, defaults={'ant': '+'}, left_ctxts=strid, tier=tier)
+        rule = D2LRule(seginv=seginv, target={'S'}, features={'ant'}, defaults={'ant': '+'}, left_ctxts=strid, tier=tier)
         assert(rule.errant_ctxts(pairs) == set())
 
     def test_rule_set_ctxts(self):
         seginv = SegInv()
         seginv.add_segs({'a', 'e', 'i', 'o', 'u', 't', 'p'})
         vowels = NatClass(feats={'+syl'}, seginv=seginv)
-        rule = Rule(seginv=seginv, target={'e', 'i'}, features={'back'}, left_ctxts={'a', 'e', 'i', 'o', 'u', 't', 'p'})
+        rule = D2LRule(seginv=seginv, target={'e', 'i'}, features={'back'}, left_ctxts={'a', 'e', 'i', 'o', 'u', 't', 'p'})
         assert(rule.left_ctxts == {'a', 'e', 'i', 'o', 'u', 't', 'p'})
         rule.set_ctxts(ctxts=vowels)
         assert(rule.left_ctxts == vowels)
