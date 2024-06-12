@@ -92,6 +92,12 @@ class SegInv:
         if self.ipa_file_path is None:
             # make ord('g') == 103 and ord('ɡ') == 609 the same, since panphon only as 609
             self._seg_to_feat_vec['g'] = self._seg_to_feat_vec['ɡ']
+            # add voiceless velar nasal
+            self._seg_to_feat_vec['ŋ̊'] = list(self._seg_to_feat_vec['ŋ'])
+            self._seg_to_feat_vec['ŋ̊'][self.feature_space.index('voi')] = '-'
+            # add voicelesss palatal fricative
+            self._seg_to_feat_vec['ç'] = list(self._seg_to_feat_vec['ʝ'])
+            self._seg_to_feat_vec['ç'][self.feature_space.index('voi')] = '-'
 
         if self._add_boundary_symbols: # add boundary symbols
             self.feature_space += ['B', 'LWB', 'RWB', 'SYLB', 'MORPHB']

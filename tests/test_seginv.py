@@ -24,6 +24,21 @@ class TestSegInv(unittest.TestCase):
         assert(seginv['i'].features['LWB'] == '-')
         assert(seginv['i'].features['RWB'] == '-')
 
+    def test_init_missing(self):
+        seginv = SegInv()
+        # test voiceless velar nasal
+        voi_idx = seginv.feature_space.index('voi')
+        assert(seginv._seg_to_feat_vec['ŋ'][voi_idx] == '+')
+        assert(seginv._seg_to_feat_vec['ŋ̊'][voi_idx] == '-')
+        assert(seginv._seg_to_feat_vec['ŋ̊'][idx] == seginv._seg_to_feat_vec['ŋ'][idx] 
+               for idx in range(len(seginv.feature_space)) if idx != voi_idx)
+        assert(seginv.add_and_get('ŋ̊'))
+        # test voicelesss palatal fricative
+        assert(seginv._seg_to_feat_vec['ʝ'][voi_idx] == '+')
+        assert(seginv._seg_to_feat_vec['ç'][voi_idx] == '-')
+        assert(seginv._seg_to_feat_vec['ç'][idx] == seginv._seg_to_feat_vec['ʝ'][idx] 
+               for idx in range(len(seginv.feature_space)) if idx != voi_idx)
+        assert(seginv.add_and_get('ç'))
 
     def test_add(self):
         seginv = SegInv()
