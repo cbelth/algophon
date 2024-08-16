@@ -1,3 +1,5 @@
+from algophon.seg import Seg
+
 class SegStr:
     '''
     A class representing a sequence of phonological segments (Seg objects).
@@ -94,6 +96,8 @@ class SegStr:
         '''
         if isinstance(other, str) or isinstance(other, list):
             other = SegStr(other, seginv=self._seginv)
+        elif isinstance(other, Seg):
+            return SegStr(self._segs + [other], seginv=self._seginv)
         elif not isinstance(other, SegStr):
             raise ValueError(f'Cannot concatenate a SegStr object with an object of type {type(other)}')
         return SegStr(segs=self._segs + other._segs, seginv=self._seginv)
