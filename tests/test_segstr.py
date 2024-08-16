@@ -52,6 +52,15 @@ class TestSegStr(unittest.TestCase):
         y = SegStr('j ə', seginv=SegInv())
         assert(x + y == 'eː n t j ə')
 
+    def test_concat_seg(self):
+        seginv = SegInv()
+        x = SegStr('eː n t', seginv=seginv)
+        y = seginv.add_and_get('ə')
+        assert(isinstance(y, Seg))
+        z = x + y
+        assert(isinstance(z, SegStr))
+        assert(z == 'eː n t ə')
+
     def test_lt(self):
         x = SegStr('a', seginv=SegInv())
         y = SegStr('b', seginv=SegInv())
