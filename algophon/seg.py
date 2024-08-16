@@ -59,3 +59,17 @@ class Seg:
         if feature not in self.features:
             raise ValueError(f":feature: '{feature}' not in self.features")
         self.features.__setitem__(feature, val)
+
+    def __add__(self, other: object):
+        '''
+        Handles concatenation.
+
+        :other: Can be any of the following:
+            - a SegStr object
+
+        :return: a new SegStr object containing the concatenation
+        '''
+        from algophon.segstr import SegStr
+        if isinstance(other, SegStr):
+            return SegStr([self] + other._segs, seginv=other._seginv)
+        raise ValueError(f'Cannot concatenate a Seg object with an object of type {type(other)}')

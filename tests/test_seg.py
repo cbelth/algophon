@@ -2,6 +2,8 @@ import unittest
 import sys
 sys.path.append('../')
 from algophon.seg import Seg
+from algophon.segstr import SegStr
+from algophon.seginv import SegInv
 from algophon.symbols import LONG
 
 class TestSeg(unittest.TestCase):
@@ -66,6 +68,14 @@ class TestSeg(unittest.TestCase):
             assert(True)
             assert(e.__str__() == ":feature: 'cons' not in self.features")
 
+    def test_concat_seg(self):
+        seginv = SegInv()
+        x = seginv.add_and_get('t')
+        y = SegStr('eː n t', seginv=seginv)
+        assert(isinstance(x, Seg))
+        z = x + y
+        assert(isinstance(z, SegStr))
+        assert(z == 't eː n t')
 
 if __name__ == "__main__":
     unittest.main()
