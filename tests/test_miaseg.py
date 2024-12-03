@@ -188,6 +188,27 @@ class TestMiaseg(unittest.TestCase):
         assert(model.types['c'] == 'PREFIX')
         assert(model.order == ['c', 'a', 'b'])
 
+    def test_miaseg_find_allomorphs_tied_orderings(self):
+        model = Miaseg()
+
+        train = [
+            ('PA', 'pa', ()),
+            ('PA', 'pas', ('PL',)),
+            ('PA', 'pasi', ('PL', 'DIM')),
+            ('MA', 'mais', ('PL', 'DIM')),
+            ('MA', 'mai', ('DIM',)),
+            ('MA', 'ma', ()),
+        ]
+
+        model._setup_paradigms(train=train)
+        model._find_allomorphs(train=train)
+        assert(set(model.allomorphs.keys()) == set(model.types.keys()) == {'PL', 'DIM'})
+        assert(model.allomorphs['PL'] == {'s': 2})
+        assert(model.allomorphs['DIM'] == {'i': 2})
+        assert(model.types['PL'] == 'SUFFIX')
+        assert(model.types['DIM'] == 'SUFFIX')
+        assert(model.order == []) # no ordering can be inferred, because tied
+
     def test_miaseg_train(self):
         model = Miaseg()
         assert(model.train(train=PAPER_EXAMPLE))
