@@ -180,8 +180,8 @@ class Miaseg:
                             orderings[(diff['feat'], other_feature)] += 1 # diff_feat -> other_feature
         # retain only the most frequent type of each feature
         self.types = dict((feat, sorted(_typs.items(), reverse=True, key=lambda it: it[-1])[0][0]) for feat, _typs in types.items())
-        # remove conflicting x <-> y by choosing the one with higher frequency
-        orderings = list((x, y) for x, y in list(orderings.keys()) if orderings[(x, y)] >= orderings[(y, x)])
+        # remove conflicting x <-> y by choosing the one with higher frequency (if tied, no order is inferred)
+        orderings = list((x, y) for x, y in list(orderings.keys()) if orderings[(x, y)] > orderings[(y, x)])
         # build DAG encoding ordering
         graph = Graph(directed=True)
         graph.add_edges(orderings)
