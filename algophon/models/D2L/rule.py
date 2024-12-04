@@ -5,9 +5,10 @@ from collections import defaultdict
 from algophon import Seg, SegInv, NatClass, SegStr
 from algophon.symbols import FUNCTION_COMPOSITION, LWB, RWB, UNK, UNDERSPECIFIED
 from algophon.models.D2L import Tier
+from algophon.models import Rule
 
-class Rule:
-    def __init__(self, 
+class D2LRule(Rule):
+    def __init__(self,
                  seginv: SegInv,
                  target: set,
                  features: set,
@@ -21,9 +22,9 @@ class Rule:
         :target: a set of target (alternating) segments
         :features: a set of features that alternate
         :defaults: the values to use for :features: if no ctxt matches for a particular target.
-        :left_ctxts: (optional; default None) a set of right-adj (to target) segments that trigger rule application
+        :left_ctxts: (optional; default None) a set of left-adj (to target) segments that trigger rule application
             - Can be a set of specific segments or a NatClass object
-        :right_ctxts: (optional; default None) a set of left-adj (to target) segments that trigger a rule application
+        :right_ctxts: (optional; default None) a set of right-adj (to target) segments that trigger a rule application
             - Can be a set of specific segments or a NatClass object
         :tier: (optional; default None) a Tier object to apply the rule over
         :harmony: (optional; default True) specified whether rule enforces harmony or disharmony
@@ -56,61 +57,6 @@ class Rule:
             return f'{adj_str} / {self.left_ctxts} __{tier_str}'
         else:
             return f'{adj_str} / __ {self.right_ctxts}{tier_str}'
-
-    def __repr__(self) -> str:
-        return self.__str__()
-    
-    def produce(self, ur: Union[str, SegStr]) -> SegStr:
-        '''
-        Produces a SR for and input UR
-
-        :ur: the UR to produce an SR for. Can be:
-            - space-separated str of IPA symbols
-            - SegStr object
-        
-        :return: a SegStr representing the predicted SR
-        '''
-        if isinstance(ur, str): # convert str ur to SegStr
-            ur = SegStr(ur, seginv=self.seginv)
-        new_segs = list(ur._segs) # init new seg list
-        # apply predictions
-        for idx, seg in self._predictions(segstr=ur):
-            new_segs[idx] = seg
-        return SegStr(segs=new_segs, seginv=self.seginv) # return SegStr object
-
-    # calling a Rule object amounts to calling its produce() method
-    __call__ = produce
-    
-    def accuracy(self, pairs: Iterable) -> float:
-        '''
-        :pairs: an iterable of (UR, SR) pairs to compute accuracy for
-            - Computed over unique pairs
-
-        :return: the accuracy of the rule's predictions of the :pairs:
-        '''
-        n, m = self.tsp_stats(pairs=pairs)
-        return m / n if n > 0 else 0.0
-
-    def tsp_stats(self, pairs: Iterable) -> tuple[int, int]:
-        '''
-        Computes n and m for the TSP w.r.t a set of pairs
-
-        :pairs: an iterable of (UR, SR) pairs to compute the TSP stats for
-            - Computed over unique pairs
-        
-        :return: n and m
-        '''
-        n, m = 0, 0
-        for ur, sr in set(pairs):
-            if isinstance(ur, str):
-                ur = SegStr(ur, seginv=self.seginv)
-            if isinstance(sr, str):
-                sr = SegStr(sr, seginv=self.seginv)
-            for idx, pred_sr_seg in self._predictions(ur):
-                n += 1
-                if sr[idx] == pred_sr_seg:
-                    m += 1
-        return n, m
 
     def _predictions(self, segstr: SegStr) -> list:
         '''
