@@ -191,7 +191,7 @@ class D2L:
 
         return setup_pairs
     
-    def build_rule(self, pairs: set, delset: set=set(), tier=None, harmony: bool=True, discrepancy: Union[None, Discrepancy]=None) -> Rule:
+    def build_rule(self, pairs: set, delset: set=None, tier=None, harmony: bool=True, discrepancy: Union[None, Discrepancy]=None) -> Rule:
         '''
         Builds a rule recursively.
 
@@ -202,6 +202,7 @@ class D2L:
         :discrepancy: (Optional; default None) allows for providing a Discrepancy object
             - Useful for running D2L multiple times for different discrepancies (e.g., as in PLP)
         '''
+        delset = set() if delset is None else delset
         if discrepancy is None: # use self._discrepancy by default
             discrepancy = self._discrepancy
         target = discrepancy.get_alternating_UR_segs() # compute target segs
