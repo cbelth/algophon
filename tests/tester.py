@@ -5,6 +5,7 @@ from test_segstr import TestSegStr
 from test_natclass import TestNatClass
 from test_distance import TestDistance
 from test_utils import TestUtils
+from test_en_syllabify import TestEnSyllabify
 from test_data_structures import TestDataStructures
 from test_d2l import TestD2L
 from test_miaseg import TestMiaseg
@@ -19,6 +20,7 @@ test_segstr_suite = unittest.TestLoader().loadTestsFromTestCase(TestSegStr)
 test_natclass_suite = unittest.TestLoader().loadTestsFromTestCase(TestNatClass)
 test_distance_suite = unittest.TestLoader().loadTestsFromTestCase(TestDistance)
 test_utils_suite = unittest.TestLoader().loadTestsFromTestCase(TestUtils)
+test_en_syllabify_suite = unittest.TestLoader().loadTestsFromTestCase(TestEnSyllabify)
 test_datastructures_suite = unittest.TestLoader().loadTestsFromTestCase(TestDataStructures)
 test_d2l_suite = unittest.TestLoader().loadTestsFromTestCase(TestD2L)
 test_miaseg_suite = unittest.TestLoader().loadTestsFromTestCase(TestMiaseg)
@@ -30,6 +32,7 @@ suites = unittest.TestSuite([
     test_natclass_suite,
     test_distance_suite,
     test_utils_suite,
+    test_en_syllabify_suite,
     test_datastructures_suite,
     test_d2l_suite,
     test_miaseg_suite
